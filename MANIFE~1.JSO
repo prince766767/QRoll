@@ -1,0 +1,37 @@
+{
+  "name": "QRoll — Attendance",
+  "short_name": "QRoll",
+  "description": "QR attendance for Govt. College Bhoranj (Tarkwari) — Department of Botany.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eef2f0",
+  "theme_color": "#1f6f43",
+  "icons": [
+    {
+      "src": "qroll-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "qroll-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "qroll-icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "qroll-icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
