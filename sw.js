@@ -9,7 +9,11 @@
  * Apps Script app: attendance must never be served from a stale cache.
  */
 
-var CACHE = 'qroll-launcher-v2';
+/* Bump this version string EVERY time you change index.html, manifest.json or
+   an icon. The shell is served cache-first, so an installed phone keeps showing
+   the old page until the cache name changes — a new name makes this worker
+   install fresh and delete the previous cache on activate. */
+var CACHE = 'qroll-launcher-v3';
 var SHELL = [
   './',
   './index.html',
