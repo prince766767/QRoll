@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<!--
+  Personal-link generator (for the person who hosts the launcher).
+
+  Paste a colleague's Apps Script /exec URL and this produces the link to send
+  them. They open it, tap "Add to Home screen", and QRoll installs with the
+  proper icon pointed at THEIR Sheet. They never see this page.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QRoll — make a link for a colleague</title>
+  <link rel="icon" type="image/png" sizes="192x192" href="qroll-icon-192.png">
+  <style>
+    :root{--green:#1f6f43;--green-d:#155232;--line:#e2e8f0;--muted:#6b7280;--err:#c53030}
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(160deg,#eef2f0,#dfeae3);color:#1a202c;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+      display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px 18px}
+    .card{background:#fff;border-radius:20px;padding:28px 26px;width:100%;max-width:560px;
+      box-shadow:0 14px 40px rgba(21,82,50,.14)}
+    h1{margin:0 0 4px;font-size:22px;color:var(--green-d)}
+    p.lede{margin:0 0 20px;font-size:13.5px;color:var(--muted);line-height:1.55}
+    label{display:block;font-weight:700;font-size:12px;color:#4a5568;margin:16px 0 5px}
+    input,textarea{width:100%;font-size:14.5px;padding:12px 13px;border:1.5px solid var(--line);
+      border-radius:11px;font-family:inherit;background:#fff}
+    input:focus,textarea:focus{outline:none;border-color:var(--green)}
+    textarea{resize:vertical;min-height:74px;font-size:13px;line-height:1.5}
+    button{background:var(--green);color:#fff;border:none;border-radius:11px;
+      padding:12px 18px;font-weight:700;font-size:14.5px;cursor:pointer;font-family:inherit;
+      margin-top:14px}
+    button:hover{filter:brightness(1.06)}
+    button.ghost{background:#fff;color:var(--green);border:1.5px solid var(--green)}
+    .row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+    .err{color:var(--err);font-size:12.5px;font-weight:600;min-height:16px;margin-top:6px}
+    .out{background:#f0f7f2;border:1px solid #cfe6d8;border-radius:13px;padding:15px 16px;
+      margin-top:18px}
+    .out h2{margin:0 0 8px;font-size:14px;color:var(--green-d)}
+    .out .link{font-size:12.5px;word-break:break-all;background:#fff;border:1px solid #cfe6d8;
+      border-radius:9px;padding:11px 12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+    .note{font-size:12px;color:var(--muted);line-height:1.55;margin-top:14px}
+    .btnlink{display:inline-flex;align-items:center;text-decoration:none;
+      background:#fff;color:var(--green);border:1.5px solid var(--green);
+      border-radius:11px;padding:12px 18px;font-weight:700;font-size:14.5px;
+      margin-top:14px}
+    .btnlink:hover{filter:brightness(1.06)}
+    .warnbox{background:#fef3c7;border:1px solid #fcd34d;color:#92400e;
+      border-radius:11px;padding:12px 14px;margin-top:14px;font-size:12.5px;
+      line-height:1.55}
+    .ok{color:var(--green);font-weight:700;font-size:12.5px;margin-left:6px}
+    .hidden{display:none}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Make a QRoll link for a colleague</h1>
+    <p class="lede">Paste their Apps Script link and send them what comes out. They
+      just tap it and choose <b>Add to Home screen</b> — no setup, no accounts,
+      nothing to install.</p>
+
+    <label>Where this launcher is published</label>
+    <input type="url" id="base" placeholder="https://prince766767.github.io/QRoll/">
+
+    <label>Their QRoll app link (ends in /exec)</label>
+    <input type="url" id="exec" placeholder="https://script.google.com/macros/s/…/exec">
+    <div class="err" id="err"></div>
+
+    <div class="row">
+      <button onclick="gen()">Make the link</button>
+      <button class="ghost" onclick="reset()">Clear</button>
+    </div>
+
+    <div class="out hidden" id="out">
+      <h2>Send them this link<span class="ok hidden" id="copied">copied ✓</span></h2>
+      <div class="link" id="link"></div>
+      <div class="row">
+        <button onclick="copyLink()">Copy link</button>
+        <button class="ghost" onclick="copyMsg()">Copy full message</button>
+        <a class="ghost btnlink" id="previewLink" target="_blank" rel="noopener">Preview safely</a>
+      </div>
+
+      <div class="warnbox">
+        <b>Don't open the plain link on your own phone.</b>
+        It's built to take over whichever browser opens it — that's what makes it
+        one-tap for your colleague. If you open it yourself, your launcher starts
+        pointing at their console. Use <b>Preview safely</b> to check it instead;
+        that leaves your own QRoll alone.
+      </div>
+
+      <label>Message to send (WhatsApp / email)</label>
+      <textarea id="msg" readonly></textarea>
+    </div>
+
+    <p class="note">
+      The link carries their app address only. Nothing is stored on the web —
+      the phone remembers it locally the first time it opens, and the address bar
+      is cleaned up straight away, so a forwarded link can't drag someone else's
+      console along with it.
+    </p>
+  </div>
+
+<script>
+  var BASE_KEY = 'qroll_launcher_base';
+
+  /* Where the launcher is published. Used when this page is opened by
+     double-clicking the local file, in which case window.location is a
+     file:/// path on the hard drive and useless for building a shareable
+     link. Change this if you ever move the launcher. */
+  var PUBLISHED_BASE = 'https://prince766767.github.io/QRoll/';
+
+  // Remember the publish URL so it only gets typed once, ever.
+  (function initBase(){
+    var el = document.getElementById('base');
+    var saved = '';
+    try { saved = localStorage.getItem(BASE_KEY) || ''; } catch(e){}
+    if (saved) { el.value = saved; return; }
+
+    // Opened from the live site? Derive it. Opened from disk? Fall back.
+    var here = window.location.href.replace(/make-link\.html.*$/, '');
+    el.value = /^https:\/\//.test(here) ? here : PUBLISHED_BASE;
+  })();
+
+  function isExec(u){
+    return /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_\-]+\/exec/.test(String(u||'').trim());
+  }
+
+  function gen(){
+    var base = document.getElementById('base').value.trim();
+    var exec = document.getElementById('exec').value.trim();
+    var err  = document.getElementById('err');
+
+    if (/^file:/i.test(base)) {
+      err.textContent = 'That’s a file on your own computer, not a web address. ' +
+                        'Use ' + PUBLISHED_BASE + ' instead.';
+      return;
+    }
+    if (!/^https:\/\/.+/.test(base)) {
+      err.textContent = 'Enter the web address where you published the launcher — ' +
+                        'it must start with https://';
+      return;
+    }
+    if (!isExec(exec)) {
+      err.textContent = 'That doesn’t look like a QRoll app link — it should start ' +
+                        'with https://script.google.com/macros/s/ and end with /exec';
+      return;
+    }
+    err.textContent = '';
+    try { localStorage.setItem(BASE_KEY, base); } catch(e){}
+
+    if (base.slice(-1) !== '/' && !/\.html$/.test(base)) base += '/';
+    var link = base + '?u=' + encodeURIComponent(exec);
+
+    document.getElementById('link').textContent = link;
+    document.getElementById('previewLink').href = link + '&preview=1';
+    document.getElementById('msg').value =
+      'QRoll — your attendance app\n\n' +
+      'Open this link on your phone:\n' + link + '\n\n' +
+      'Android (Chrome): tap the ⋮ menu → Add to Home screen.\n' +
+      'iPhone (Safari): tap Share → Add to Home Screen.\n\n' +
+      'The QRoll icon appears on your home screen and opens straight to your ' +
+      'own attendance console. You only need to do this once.';
+    document.getElementById('out').classList.remove('hidden');
+  }
+
+  function flash(){
+    var c = document.getElementById('copied');
+    c.classList.remove('hidden');
+    setTimeout(function(){ c.classList.add('hidden'); }, 1800);
+  }
+
+  function copy(text){
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(flash, fallback);
+    } else { fallback(); }
+    function fallback(){
+      var t = document.createElement('textarea');
+      t.value = text; document.body.appendChild(t); t.select();
+      try { document.execCommand('copy'); flash(); } catch(e){ alert('Copy manually:\n\n' + text); }
+      document.body.removeChild(t);
+    }
+  }
+
+  function copyLink(){ copy(document.getElementById('link').textContent); }
+  function copyMsg(){ copy(document.getElementById('msg').value); }
+
+  function reset(){
+    document.getElementById('exec').value = '';
+    document.getElementById('err').textContent = '';
+    document.getElementById('out').classList.add('hidden');
+  }
+
+  document.getElementById('exec').addEventListener('keyup', function(e){
+    if (e.key === 'Enter') gen();
+  });
+</script>
+</body>
+</html>
