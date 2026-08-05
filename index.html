@@ -139,6 +139,27 @@
       border-radius:26px;display:block;
       box-shadow:0 16px 38px rgba(21,82,50,.15), 0 2px 6px rgba(0,0,0,.05);
     }
+
+    /* ---- Independence Day dressing (1–16 August only) ----
+       The flag and the banner are display:none until Independence.apply()
+       puts .indep on <body>, so for the other 349 days of the year this
+       costs nothing but a few bytes. */
+    .sp-logorow{display:flex;align-items:center;justify-content:center;gap:14px}
+    .sp-flag{display:none}
+    body.indep .sp-flag{display:block;width:78px;height:auto;flex:0 0 auto}
+    body.indep .sp-logo{width:clamp(84px,22vw,100px);height:clamp(84px,22vw,100px)}
+
+    .indep-badge{
+      display:none;margin-top:14px;padding:7px 15px;border-radius:999px;
+      font-size:clamp(11px,3.1vw,12.5px);font-weight:700;letter-spacing:.015em;
+      color:#1a237e;
+      background:linear-gradient(90deg,rgba(255,153,51,.20),rgba(255,255,255,0) 45%,
+                 rgba(255,255,255,0) 55%,rgba(19,136,8,.20));
+      box-shadow:inset 0 0 0 1px rgba(26,35,126,.10);
+    }
+    body.indep .indep-badge{display:inline-block}
+    /* On the launcher card it sits under the tagline, not the splash tagline. */
+    .card .indep-badge{margin:12px 0 0}
     .sp-name{
       margin:26px 0 0;font-size:clamp(36px,10.5vw,46px);font-weight:800;
       letter-spacing:-.022em;line-height:1;color:var(--green-d);
@@ -239,6 +260,8 @@
     #splash.run .sp-ver      {animation-delay:1.8s}
     #splash.run .sp-dev      {animation-delay:1.9s}
     #splash.run .sp-gear     {animation:spFade .5s ease .9s forwards}
+    #splash.run .sp-flag     {animation:spFade .7s ease .3s backwards}
+    #splash.run .indep-badge {animation-delay:.72s}
 
     /* ===================== ONBOARDING ===================== */
     #onboard{
@@ -317,11 +340,48 @@
             aria-label="Settings" title="Settings">⚙</button>
 
     <div class="sp-main">
-      <img class="sp-logo" src="qroll-icon-192.png" alt="QRoll logo">
+      <div class="sp-logorow">
+        <img class="sp-logo" src="qroll-icon-192.png" alt="QRoll logo">
+
+        <!-- Waving tricolour, drawn inline: no file to download, no watermark,
+             sharp on every screen, and it animates with SMIL so it needs no JS.
+             Hidden unless <body> has .indep — see the Independence module. -->
+        <svg class="sp-flag" viewBox="0 0 100 76" role="img"
+             aria-label="Indian national flag">
+          <rect x="7" y="5" width="2.6" height="69" rx="1.3" fill="#4a4a4a"/>
+          <circle cx="8.3" cy="4.2" r="2.6" fill="#d4a017"/>
+          <path fill="#FF9933">
+            <animate attributeName="d" dur="2.6s" repeatCount="indefinite"
+              values="M12 10C38 7 66 13 92 12L92 27C66 28 38 22 12 25Z;
+                      M12 10C38 13 66 7 92 8L92 23C66 22 38 28 12 25Z;
+                      M12 10C38 7 66 13 92 12L92 27C66 28 38 22 12 25Z"/>
+          </path>
+          <path fill="#FFFFFF" stroke="#eceff1" stroke-width=".3">
+            <animate attributeName="d" dur="2.6s" repeatCount="indefinite"
+              values="M12 25C38 22 66 28 92 27L92 42C66 43 38 37 12 40Z;
+                      M12 25C38 28 66 22 92 23L92 38C66 37 38 43 12 40Z;
+                      M12 25C38 22 66 28 92 27L92 42C66 43 38 37 12 40Z"/>
+          </path>
+          <path fill="#138808">
+            <animate attributeName="d" dur="2.6s" repeatCount="indefinite"
+              values="M12 40C38 37 66 43 92 42L92 57C66 58 38 52 12 55Z;
+                      M12 40C38 43 66 37 92 38L92 53C66 52 38 58 12 55Z;
+                      M12 40C38 37 66 43 92 42L92 57C66 58 38 52 12 55Z"/>
+          </path>
+          <g fill="none" stroke="#1A237E">
+            <circle cx="52" cy="32.5" r="5" stroke-width=".9"/>
+            <circle cx="52" cy="32.5" r="3.4" stroke-width="3.1"
+                    stroke-dasharray=".42 .47"/>
+            <circle cx="52" cy="32.5" r=".9" stroke-width="1.4"/>
+          </g>
+        </svg>
+      </div>
 
       <h1 class="sp-name sp-a">QRoll</h1>
 
       <div class="sp-tag">SCAN. PRESENT. DONE.</div>
+
+      <div class="indep-badge sp-a js-indep"></div>
 
       <p class="sp-desc sp-a">Teacher-Centric Academic Management System</p>
 
@@ -417,6 +477,7 @@
     <img class="logo" src="qroll-icon-192.png" alt="QRoll logo">
     <h1>QRoll</h1>
     <div class="tag">Scan. Present. Done.</div>
+    <div class="indep-badge js-indep"></div>
     <p class="sub" id="sub">Govt. College Bhoranj (Tarkwari)</p>
 
     <!-- Normal view: this phone knows which QRoll app to open -->
@@ -697,6 +758,52 @@
     return { pick:pick, all:QUOTES };
   })();
 
+  /* --------------------------------------------------- Independence Day */
+  var Independence = (function(){
+    var FIRST_YEAR = 1947;   // 15 Aug 1947 counts as the 1st Independence Day
+    var MONTH      = 7;      // August (JS months are 0-based)
+    var FROM_DAY   = 1;      // banner appears on 1 August…
+    var TO_DAY     = 16;     // …and is gone once 17 August starts
+
+    /** True while the phone's own clock is inside the August window. Uses
+     *  local time on purpose — the greeting works the same way. */
+    function inWindow(date){
+      var d = date || new Date();
+      return d.getMonth() === MONTH &&
+             d.getDate()  >= FROM_DAY &&
+             d.getDate()  <= TO_DAY;
+    }
+
+    /** 1st, 2nd, 3rd, 4th… 11th/12th/13th are the usual exceptions. */
+    function ordinal(n){
+      var tens = n % 100, unit = n % 10;
+      if (tens >= 11 && tens <= 13) return n + 'th';
+      if (unit === 1) return n + 'st';
+      if (unit === 2) return n + 'nd';
+      if (unit === 3) return n + 'rd';
+      return n + 'th';
+    }
+
+    /** Counts the anniversary from 1947, so 2026 reads "80th" and every year
+     *  after that takes care of itself — nothing to edit next August. */
+    function wish(date){
+      var year = (date || new Date()).getFullYear();
+      return 'Happy ' + ordinal(year - FIRST_YEAR + 1) + ' Independence Day';
+    }
+
+    /** Flip the flag and the banner on, if today is one of the sixteen days.
+     *  Everything is CSS-gated off body.indep, so this is the only switch. */
+    function apply(){
+      if (!inWindow()) return;
+      document.body.classList.add('indep');
+      var text = wish();
+      var nodes = document.querySelectorAll('.js-indep');
+      for (var i = 0; i < nodes.length; i++) nodes[i].textContent = text;
+    }
+
+    return { apply:apply, inWindow:inWindow, wish:wish, ordinal:ordinal };
+  })();
+
   /* ----------------------------------------------------------- Onboarding */
   var Onboarding = (function(){
     var wrap  = document.getElementById('onboard');
@@ -895,6 +1002,7 @@
   /* First launch (no saved name) shows the onboarding card and holds the
      splash back; every launch after that goes straight into the splash. */
   (function boot(){
+    Independence.apply();          // seasonal dressing, before anything paints
     if (Store.getName()) {
       Splash.run();
     } else {
