@@ -13,7 +13,7 @@
    an icon. The shell is served cache-first, so an installed phone keeps showing
    the old page until the cache name changes — a new name makes this worker
    install fresh and delete the previous cache on activate. */
-var CACHE = 'qroll-launcher-v4';
+var CACHE = 'qroll-launcher-v5';
 var SHELL = [
   './',
   './index.html',

@@ -171,31 +171,140 @@
     }
     .sp-dev .sp-devrole{display:block;font-size:11.5px;color:#98a0a6}
 
-    .sp-skip{
-      display:block;margin:20px auto 0;padding:9px 16px;border:none;border-radius:999px;
-      background:rgba(31,111,67,.07);color:var(--green);
-      font-family:inherit;font-size:11.5px;font-weight:600;letter-spacing:.02em;
-      cursor:pointer;transition:background .15s;
+    /* ---- personalisation block: greeting, teacher, quote, loader ---- */
+    .sp-greetwrap{
+      margin-top:26px;padding-top:24px;width:100%;max-width:330px;
+      border-top:1px solid rgba(31,111,67,.10);
     }
-    .sp-skip:hover{background:rgba(31,111,67,.13)}
-    .sp-skip:active{transform:scale(.98)}
+    .sp-greet{
+      font-size:clamp(15px,4.2vw,17px);font-weight:600;color:var(--green);
+      line-height:1.35;
+    }
+    .sp-teacher{
+      margin-top:4px;font-size:clamp(17px,4.8vw,19px);font-weight:700;
+      letter-spacing:-.01em;color:var(--green-d);line-height:1.3;
+      overflow-wrap:anywhere;
+    }
+    .sp-quote{
+      margin-top:16px;font-size:12.5px;line-height:1.65;color:#7a8288;
+      font-style:italic;max-width:26em;margin-left:auto;margin-right:auto;
+    }
+    .sp-load{
+      margin-top:20px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+      color:#a5adb3;
+    }
+    .sp-dot{animation:spBlink 1.4s ease-in-out infinite}
+    .sp-dot:nth-child(2){animation-delay:.18s}
+    .sp-dot:nth-child(3){animation-delay:.36s}
+
+    /* Shown instead of "Loading" once the auto-redirect has been cancelled,
+       so the splash is never a dead end. */
+    .sp-go{
+      margin-top:18px;padding:12px 24px;border:none;border-radius:14px;
+      background:var(--green);color:#fff;font-family:inherit;font-size:15px;
+      font-weight:700;cursor:pointer;box-shadow:0 6px 18px rgba(21,82,50,.22);
+    }
+    .sp-go:active{transform:scale(.98)}
+
+    /* ---- settings gear ---- */
+    .sp-gear{
+      position:absolute;top:calc(12px + env(safe-area-inset-top));
+      right:calc(10px + env(safe-area-inset-right));
+      width:42px;height:42px;border:none;border-radius:50%;
+      background:transparent;color:#8a9299;font-size:21px;line-height:1;
+      cursor:pointer;transition:background .15s,color .15s;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .sp-gear:hover{background:rgba(31,111,67,.08);color:var(--green)}
+    .sp-gear:active{transform:scale(.94)}
 
     @keyframes spLogoIn{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:none}}
     @keyframes spRise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
     @keyframes spFade{from{opacity:0}to{opacity:1}}
+    @keyframes spBlink{0%,60%,100%{opacity:.25}30%{opacity:1}}
 
-    .sp-a{opacity:0;animation:spRise .72s cubic-bezier(.2,.6,.35,1) forwards}
-    .sp-logo{opacity:0;animation:spLogoIn .8s cubic-bezier(.2,.6,.35,1) .1s forwards}
-    .sp-name{animation-delay:.5s}
-    .sp-tag {opacity:0;animation:spFade .8s ease .95s forwards}
-    .sp-desc{animation-delay:1.35s}
-    .sp-init{animation-delay:1.55s}
-    .sp-ver {animation-delay:1.7s}
-    .sp-dev {animation-delay:1.85s}
-    .sp-skip{opacity:0;animation:spFade .5s ease 2.1s forwards}
+    /* Nothing animates until JS adds .run — the greeting and quote must be
+       written into the DOM before the sequence starts, and on first launch
+       the whole splash waits behind the onboarding card. */
+    #splash .sp-a,#splash .sp-logo,#splash .sp-tag,#splash .sp-gear{opacity:0}
+    #splash.run .sp-a  {animation:spRise .72s cubic-bezier(.2,.6,.35,1) forwards}
+    #splash.run .sp-logo{animation:spLogoIn .8s cubic-bezier(.2,.6,.35,1) .05s forwards}
+    #splash.run .sp-name     {animation-delay:.35s}
+    #splash.run .sp-tag      {animation:spFade .8s ease .6s forwards}
+    #splash.run .sp-desc     {animation-delay:.85s}
+    #splash.run .sp-greetwrap{animation-delay:1.05s}
+    #splash.run .sp-quote    {animation-delay:1.35s}
+    #splash.run .sp-load     {animation-delay:1.55s}
+    #splash.run .sp-init     {animation-delay:1.7s}
+    #splash.run .sp-ver      {animation-delay:1.8s}
+    #splash.run .sp-dev      {animation-delay:1.9s}
+    #splash.run .sp-gear     {animation:spFade .5s ease .9s forwards}
+
+    /* ===================== ONBOARDING ===================== */
+    #onboard{
+      position:fixed;inset:0;z-index:10000;display:none;
+      align-items:center;justify-content:center;
+      background:linear-gradient(180deg,#fff 0%,#fbfdfc 52%,#f1f6f3 100%);
+      padding:24px calc(20px + env(safe-area-inset-right))
+              calc(24px + env(safe-area-inset-bottom))
+              calc(20px + env(safe-area-inset-left));
+    }
+    #onboard.show{display:flex;animation:spFade .35s ease}
+    .ob-card{
+      width:100%;max-width:380px;background:#fff;border-radius:22px;
+      padding:32px 26px 26px;text-align:center;
+      box-shadow:0 14px 44px rgba(21,82,50,.13),0 2px 8px rgba(0,0,0,.04);
+    }
+    .ob-logo{width:72px;height:72px;border-radius:18px;display:block;margin:0 auto 18px;
+      box-shadow:0 6px 18px rgba(0,0,0,.10)}
+    .ob-title{margin:0;font-size:23px;font-weight:800;letter-spacing:-.015em;color:var(--green-d)}
+    .ob-sub{margin:9px 0 0;font-size:13.5px;line-height:1.5;color:#7a8288}
+    .ob-label{
+      display:block;margin:26px 0 7px;text-align:left;font-size:12px;font-weight:700;
+      letter-spacing:.06em;text-transform:uppercase;color:#8a9299;
+    }
+    #teacherInput{
+      width:100%;font-size:16px;padding:13px 14px;border:1.5px solid var(--line);
+      border-radius:12px;font-family:inherit;color:var(--ink);
+    }
+    #teacherInput:focus{outline:none;border-color:var(--green);
+      box-shadow:0 0 0 3px rgba(31,111,67,.10)}
+    .ob-err{min-height:17px;margin-top:6px;text-align:left;
+      font-size:12px;font-weight:600;color:#c53030}
+    .ob-note{margin-top:14px;font-size:11.5px;line-height:1.6;color:#98a0a6}
+
+    /* ===================== SETTINGS SHEET ===================== */
+    #sheetWrap{position:fixed;inset:0;z-index:10001;display:none}
+    #sheetWrap.show{display:block}
+    .sh-scrim{position:absolute;inset:0;background:rgba(16,32,24,.42);
+      animation:spFade .25s ease}
+    .sh-sheet{
+      position:absolute;left:0;right:0;bottom:0;background:#fff;
+      border-radius:22px 22px 0 0;padding:10px 0 calc(14px + env(safe-area-inset-bottom));
+      max-width:520px;margin:0 auto;box-shadow:0 -8px 40px rgba(0,0,0,.18);
+      animation:shUp .3s cubic-bezier(.2,.7,.3,1);
+      max-height:86vh;overflow-y:auto;
+    }
+    @keyframes shUp{from{transform:translateY(100%)}to{transform:none}}
+    .sh-grip{width:38px;height:4px;border-radius:2px;background:#dfe5e2;margin:4px auto 12px}
+    .sh-head{padding:0 22px 10px;font-size:16px;font-weight:700;color:var(--green-d)}
+    .sh-item{
+      display:flex;align-items:center;gap:13px;width:100%;
+      padding:14px 22px;border:none;background:none;cursor:pointer;
+      font-family:inherit;font-size:14.5px;color:var(--ink);text-align:left;
+    }
+    .sh-item:hover{background:#f5f8f6}
+    .sh-item:active{background:#eef4f0}
+    .sh-item .sh-ic{font-size:17px;width:22px;text-align:center;flex:0 0 auto}
+    .sh-item.danger{color:#c53030}
+    .sh-sep{height:1px;background:var(--line);margin:8px 22px}
+    .sh-about{padding:2px 22px 8px;font-size:12.5px;line-height:1.7;color:#7a8288}
+    .sh-about b{color:var(--green-d)}
+    .sh-foot{padding:10px 22px 2px;font-size:11px;letter-spacing:.06em;color:#a5adb3}
 
     @media (prefers-reduced-motion:reduce){
-      #splash *{animation-duration:.01ms !important;animation-delay:0s !important;opacity:1 !important}
+      #splash *,#onboard,#onboard *,#sheetWrap *{
+        animation-duration:.01ms !important;animation-delay:0s !important;opacity:1 !important}
       #splash{transition:none}
     }
   </style>
@@ -204,6 +313,9 @@
 
   <!-- ===================== SPLASH ===================== -->
   <div id="splash" role="status" aria-label="QRoll is starting">
+    <button type="button" class="sp-gear" id="spGear"
+            aria-label="Settings" title="Settings">⚙</button>
+
     <div class="sp-main">
       <img class="sp-logo" src="qroll-icon-192.png" alt="QRoll logo">
 
@@ -213,6 +325,20 @@
 
       <p class="sp-desc sp-a">Teacher-Centric Academic Management System</p>
 
+      <!-- Filled in by JS before the animation starts. Empty in the source so a
+           stale cached page can never flash yesterday's greeting. -->
+      <div class="sp-greetwrap sp-a">
+        <div class="sp-greet"   id="spGreet"></div>
+        <div class="sp-teacher" id="spTeacher"></div>
+      </div>
+
+      <p class="sp-quote sp-a" id="spQuote"></p>
+
+      <div class="sp-load sp-a" id="spLoad">Loading<span class="sp-dot">.</span><span class="sp-dot">.</span><span class="sp-dot">.</span></div>
+      <button type="button" class="sp-go hidden" id="spGo">Open Teacher Console</button>
+    </div>
+
+    <div class="sp-foot">
       <div class="sp-init sp-a">
         A Digital Initiative of
         <span class="sp-college">Government College Bhoranj</span>
@@ -220,18 +346,72 @@
       </div>
 
       <div class="sp-ver sp-a">Version 1.0</div>
-    </div>
 
-    <div class="sp-foot">
       <div class="sp-dev sp-a">
         Developed by
         <span class="sp-devname">Dr. Prince Thakur</span>
         <span class="sp-devrole">Assistant Professor (Botany)</span>
       </div>
-      <button type="button" class="sp-skip" id="spSkip">Install &amp; setup options</button>
     </div>
   </div>
   <!-- =================== END SPLASH =================== -->
+
+  <!-- =================== ONBOARDING (first launch only) =================== -->
+  <div id="onboard">
+    <div class="ob-card">
+      <img class="ob-logo" src="qroll-icon-192.png" alt="QRoll logo">
+      <h2 class="ob-title">Welcome to QRoll</h2>
+      <p class="ob-sub">Teacher-Centric Academic Management System</p>
+
+      <label class="ob-label" for="teacherInput">Teacher Name</label>
+      <input type="text" id="teacherInput" placeholder="Dr. Prince Thakur"
+             autocomplete="name" autocapitalize="words" spellcheck="false"
+             maxlength="60">
+      <div class="ob-err" id="teacherErr"></div>
+
+      <button class="btn" id="teacherSave">Save &amp; Continue</button>
+      <p class="ob-note">Stored on this phone only. You can change it any time
+        from&nbsp;⚙&nbsp;Settings.</p>
+    </div>
+  </div>
+
+  <!-- =================== SETTINGS SHEET =================== -->
+  <div id="sheetWrap" role="dialog" aria-modal="true" aria-label="Settings">
+    <div class="sh-scrim" id="sheetScrim"></div>
+    <div class="sh-sheet">
+      <div class="sh-grip"></div>
+      <div class="sh-head">Settings</div>
+
+      <button class="sh-item" id="shEdit">
+        <span class="sh-ic" aria-hidden="true">✎</span>Edit teacher name</button>
+      <button class="sh-item danger" id="shReset">
+        <span class="sh-ic" aria-hidden="true">↺</span>Reset teacher name</button>
+
+      <div class="sh-sep"></div>
+
+      <button class="sh-item" id="shLauncher">
+        <span class="sh-ic" aria-hidden="true">⌂</span>Install &amp; QRoll link options</button>
+      <button class="sh-item" id="shAbout">
+        <span class="sh-ic" aria-hidden="true">ⓘ</span>About QRoll</button>
+
+      <div class="sh-about hidden" id="shAboutText">
+        <b>QRoll</b> — Scan. Present. Done.<br>
+        A teacher-centric academic management system: students mark attendance
+        by scanning a rotating QR code, and the record lands straight in the
+        teacher's own sheet. Your name, greeting and quotes are stored on this
+        phone and work offline; attendance itself always needs a connection.<br><br>
+        A Digital Initiative of <b>Government College Bhoranj</b>, District
+        Hamirpur, Himachal Pradesh. Developed by Dr. Prince Thakur, Assistant
+        Professor (Botany).
+      </div>
+
+      <div class="sh-sep"></div>
+      <div class="sh-foot">VERSION 1.0</div>
+
+      <button class="sh-item" id="shClose" style="justify-content:center;color:var(--muted);font-weight:600">
+        Close</button>
+    </div>
+  </div>
 
   <main class="card">
     <img class="logo" src="qroll-icon-192.png" alt="QRoll logo">
@@ -400,9 +580,221 @@
     }
   })();
 
-  /* ====================== SPLASH SCREEN ======================
-     Opening sequence: logo → "QRoll" → tagline → the rest rises into place
-     (~2.6s of animation), then a short hold before handing off.
+  /* ══════════════════════════════════════════════════════════════════
+     PERSONALISATION LAYER
+     ------------------------------------------------------------------
+     Everything below is launcher-only and 100% offline: the teacher's
+     name, the greeting and the quotes all come from localStorage and
+     from constants baked into this file. Nothing here talks to Apps
+     Script, Sheets, cookies or any server.
+
+     Modules, in order:
+       Store      — the one place localStorage is touched
+       Greeting   — time of day + random language
+       Quotes     — 30 quotes, one picked per launch
+       Onboarding — first-run "what's your name" card
+       Settings   — the ⚙ sheet
+       Splash     — sequences the above, then hands off
+     ══════════════════════════════════════════════════════════════════ */
+
+  /* ---------------------------------------------------------------- Store */
+  var Store = (function(){
+    var NAME_KEY = 'teacherName';
+
+    /** Read the saved teacher name. Returns '' if unset or storage is blocked
+     *  (private mode, cookies-off), so callers never have to null-check. */
+    function getName(){
+      try { return (localStorage.getItem(NAME_KEY) || '').trim(); }
+      catch(e){ return ''; }
+    }
+
+    /** Save the teacher name. Silently no-ops if storage is unavailable —
+     *  the launcher still works, it just asks again next time. */
+    function setName(name){
+      try { localStorage.setItem(NAME_KEY, String(name).trim()); } catch(e){}
+    }
+
+    /** Forget the teacher name, sending the next launch back to onboarding. */
+    function clearName(){
+      try { localStorage.removeItem(NAME_KEY); } catch(e){}
+    }
+
+    return { getName:getName, setName:setName, clearName:clearName };
+  })();
+
+  /* ------------------------------------------------------------- Greeting */
+  var Greeting = (function(){
+    // One entry per language. Keep the three arrays parallel — index order is
+    // [morning, afternoon, evening] and the code relies on that.
+    var GREETINGS = {
+      en: { morning:'Good Morning', afternoon:'Good Afternoon', evening:'Good Evening' },
+      hi: { morning:'सुप्रभात',      afternoon:'नमस्कार',        evening:'शुभ संध्या'   },
+      fr: { morning:'Bonjour',       afternoon:'Bon après-midi', evening:'Bonsoir'      }
+    };
+    var LANGS = ['en','hi','fr'];
+
+    /** Which part of the day it is right now, by the phone's own clock.
+     *  05:00–11:59 morning · 12:00–16:59 afternoon · 17:00–04:59 evening. */
+    function partOfDay(date){
+      var h = (date || new Date()).getHours();
+      if (h >= 5  && h < 12) return 'morning';
+      if (h >= 12 && h < 17) return 'afternoon';
+      return 'evening';                       // includes the small hours
+    }
+
+    /** Pick one language at random, then return that language's greeting for
+     *  the current time. Exactly one greeting, never a mixed-language list. */
+    function pick(){
+      var lang = LANGS[Math.floor(Math.random() * LANGS.length)];
+      return GREETINGS[lang][partOfDay()];
+    }
+
+    return { pick:pick, partOfDay:partOfDay };
+  })();
+
+  /* --------------------------------------------------------------- Quotes */
+  var Quotes = (function(){
+    // 30 short, unattributed lines — deliberately unattributed so no quote is
+    // ever put in the wrong person's mouth.
+    var QUOTES = [
+      'Teaching is the profession that creates all other professions.',
+      'Education is the passport to the future.',
+      'A teacher inspires generations.',
+      'Every lecture shapes a future.',
+      'The best teachers teach from the heart, not from the book.',
+      'Learning never exhausts the mind.',
+      'A good teacher makes hard things look easy.',
+      'Education is not filling a bucket, but lighting a fire.',
+      'Students rarely remember lessons; they remember teachers.',
+      'Knowledge shared is knowledge multiplied.',
+      'Every classroom is a small laboratory of the future.',
+      'Patience is the quiet strength of every teacher.',
+      'Teach the mind, touch the heart, shape the future.',
+      'One good question can open a lifetime of curiosity.',
+      'Attendance is the first step; attention is the second.',
+      'Small lessons, repeated daily, build great minds.',
+      'A teacher’s reward is the student who goes further.',
+      'Education turns effort into opportunity.',
+      'Curiosity is the engine of every discovery.',
+      'To teach is to learn twice.',
+      'Discipline today is freedom tomorrow.',
+      'A library is a classroom without walls.',
+      'Great teachers ask better questions.',
+      'Every expert was once a beginner.',
+      'Understanding outlasts memorising.',
+      'The roots of education are bitter, but the fruit is sweet.',
+      'A class is not a crowd; it is a room full of futures.',
+      'Teach so that the learning outlives the lesson.',
+      'Progress is made one prepared lecture at a time.',
+      'Education is the most powerful tool for changing the world.'
+    ];
+
+    /** Return one quote at random. Fresh on every launch. */
+    function pick(){
+      return QUOTES[Math.floor(Math.random() * QUOTES.length)];
+    }
+
+    return { pick:pick, all:QUOTES };
+  })();
+
+  /* ----------------------------------------------------------- Onboarding */
+  var Onboarding = (function(){
+    var wrap  = document.getElementById('onboard');
+    var input = document.getElementById('teacherInput');
+    var err   = document.getElementById('teacherErr');
+    var done  = null;                       // callback handed in by show()
+
+    /** Reject blanks and single characters; anything else is the teacher's
+     *  business, including initials, degrees and non-Latin scripts. */
+    function validate(value){
+      var v = value.trim().replace(/\s+/g, ' ');
+      if (!v)            return { ok:false, msg:'Please enter your name.' };
+      if (v.length < 2)  return { ok:false, msg:'That looks too short.' };
+      return { ok:true, value:v };
+    }
+
+    /** Save on click / Enter, then hand control back to whoever called show(). */
+    function submit(){
+      var res = validate(input.value);
+      if (!res.ok) { err.textContent = res.msg; input.focus(); return; }
+      err.textContent = '';
+      Store.setName(res.value);
+      wrap.classList.remove('show');
+      if (done) { var cb = done; done = null; cb(res.value); }
+    }
+
+    /** Show the card. `prefill` populates the box when editing an existing
+     *  name; `onDone` fires once a valid name has been stored. */
+    function show(prefill, onDone){
+      done = onDone || null;
+      input.value = prefill || '';
+      err.textContent = '';
+      wrap.classList.add('show');
+      // A tick's delay — focusing mid-transition makes Android jump the layout.
+      setTimeout(function(){ try { input.focus(); } catch(e){} }, 120);
+    }
+
+    document.getElementById('teacherSave').addEventListener('click', submit);
+    input.addEventListener('keyup', function(e){ if (e.key === 'Enter') submit(); });
+
+    return { show:show };
+  })();
+
+  /* ------------------------------------------------------------- Settings */
+  var Settings = (function(){
+    var wrap  = document.getElementById('sheetWrap');
+    var about = document.getElementById('shAboutText');
+    var onOpen  = null;   // splash uses this to cancel its auto-redirect
+    var onReveal = null;  // splash uses this to drop to the launcher card
+
+    /** Open the sheet. Opening it always cancels the pending redirect —
+     *  a teacher reaching for Settings does not want to be sent away. */
+    function open(){
+      wrap.classList.add('show');
+      if (onOpen) onOpen();
+    }
+
+    /** Close the sheet and re-collapse the About text. */
+    function close(){
+      wrap.classList.remove('show');
+      about.classList.add('hidden');
+    }
+
+    /** Re-run onboarding with the current name pre-filled, then repaint. */
+    function editName(){
+      close();
+      Onboarding.show(Store.getName(), function(){ Splash.repaint(); });
+    }
+
+    /** Forget the name and ask for it again from scratch. */
+    function resetName(){
+      if (!window.confirm('Reset the saved teacher name on this phone?')) return;
+      Store.clearName();
+      close();
+      Onboarding.show('', function(){ Splash.repaint(); });
+    }
+
+    /** Let the splash register its cancel / reveal hooks. */
+    function wire(hooks){ onOpen = hooks.onOpen; onReveal = hooks.onReveal; }
+
+    document.getElementById('shEdit')  .addEventListener('click', editName);
+    document.getElementById('shReset') .addEventListener('click', resetName);
+    document.getElementById('shAbout') .addEventListener('click', function(){
+      about.classList.toggle('hidden');
+    });
+    document.getElementById('shLauncher').addEventListener('click', function(){
+      close();
+      if (onReveal) onReveal();      // dissolve the splash, show the old card
+    });
+    document.getElementById('shClose') .addEventListener('click', close);
+    document.getElementById('sheetScrim').addEventListener('click', close);
+
+    return { open:open, close:close, wire:wire };
+  })();
+
+  /* --------------------------------------------------------------- Splash */
+  /* Sequence: logo → "QRoll" → tagline → description → greeting + teacher →
+     quote → Loading, ~2.7s of animation, then hand off at SPLASH_MS.
 
      Where it hands off to:
        • this phone knows its QRoll app  →  the teacher console, which opens
@@ -410,30 +802,57 @@
        • it doesn't (or we're previewing someone else's link)  →  the launcher
          card underneath, so first-run setup still works.
 
-     "Install & setup options" cancels the hand-off and stays on the launcher.
-     That escape hatch matters: Add-to-Home-screen must be done FROM this page,
-     and it's also how a teacher swaps in a different QRoll link later.
+     ⚙ Settings cancels the hand-off. That escape hatch matters: Add-to-Home-
+     screen must be done FROM this page, and it's also how a teacher swaps in
+     a different QRoll link later. */
+  var Splash = (function(){
+    var SPLASH_MS = 3000;          // whole splash, animation included
 
-     SPLASH_MS is the whole splash, animation included — tune it here.
-     ============================================================ */
-  (function splash(){
-    var SPLASH_MS = 3400;
+    var el      = document.getElementById('splash');
+    var elGreet = document.getElementById('spGreet');
+    var elName  = document.getElementById('spTeacher');
+    var elQuote = document.getElementById('spQuote');
+    var elLoad  = document.getElementById('spLoad');
+    var elGo    = document.getElementById('spGo');
 
-    var el = document.getElementById('splash');
-    if (!el) return;
-
+    var timer = null;
     var handed = false;
 
+    /** Write this launch's greeting, name and quote into the DOM. Called
+     *  before the animation starts, and again after a name change. */
+    function repaint(){
+      var name = Store.getName();
+      elGreet.textContent = Greeting.pick() + (name ? ',' : '');
+      elName.textContent  = name;
+      elQuote.textContent = '“' + Quotes.pick() + '”';
+    }
+
+    /** Disarm the pending redirect without touching the UI. */
+    function stopTimer(){ clearTimeout(timer); timer = null; }
+
+    /** Stop the auto-redirect and swap "Loading…" for a manual button, so
+     *  cancelling never leaves the teacher stranded. Idempotent. */
+    function cancel(){
+      stopTimer();
+      elLoad.classList.add('hidden');
+      elGo.classList.remove('hidden');
+      elGo.textContent = (QROLL_URL && !PREVIEW)
+        ? 'Open Teacher Console'
+        : 'Continue';
+    }
+
+    /** Fade the splash out and expose the launcher card beneath it. */
     function dismiss(){
       if (handed) return;
       handed = true;
-      clearTimeout(timer);
+      cancel();
       el.classList.add('gone');
       document.body.classList.remove('splash-on');
       // Drop it from the tree once the fade is over so it can't trap taps.
       setTimeout(function(){ if (el.parentNode) el.parentNode.removeChild(el); }, 700);
     }
 
+    /** Time's up: go to the teacher console, or fall back to the card. */
     function handOff(){
       if (handed) return;
       if (QROLL_URL && !PREVIEW) {
@@ -446,12 +865,41 @@
       dismiss();
     }
 
-    var timer = setTimeout(handOff, SPLASH_MS);
+    /** Paint, start the animation, arm the redirect. */
+    function run(){
+      repaint();
+      el.classList.add('run');
+      stopTimer();
+      elLoad.classList.remove('hidden');
+      elGo.classList.add('hidden');
+      timer = setTimeout(handOff, SPLASH_MS);
+    }
 
-    document.getElementById('spSkip').addEventListener('click', function(e){
+    document.getElementById('spGear').addEventListener('click', function(e){
       e.stopPropagation();
-      dismiss();
+      Settings.open();
     });
+
+    // Manual hand-off once the countdown has been cancelled.
+    elGo.addEventListener('click', function(){
+      if (QROLL_URL && !PREVIEW) { handed = true; window.location.replace(QROLL_URL); }
+      else dismiss();
+    });
+
+    Settings.wire({ onOpen:cancel, onReveal:dismiss });
+
+    return { run:run, repaint:repaint, cancel:cancel, dismiss:dismiss };
+  })();
+
+  /* ----------------------------------------------------------------- Boot */
+  /* First launch (no saved name) shows the onboarding card and holds the
+     splash back; every launch after that goes straight into the splash. */
+  (function boot(){
+    if (Store.getName()) {
+      Splash.run();
+    } else {
+      Onboarding.show('', function(){ Splash.run(); });
+    }
   })();
 
   // A service worker makes Chrome treat this as an installable app rather than
