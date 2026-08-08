@@ -82,9 +82,11 @@
         radial-gradient(70% 45% at 50% 108%, rgba(0,0,0,.34) 0%, rgba(0,0,0,0) 60%),
         linear-gradient(168deg,#1f6f43 0%,#12492c 52%,#0c3520 100%);
       overflow-y:auto;cursor:pointer;
-      transition:opacity .45s ease;
     }
-    .splash.leaving{opacity:0}
+    /* Deliberately NO fade-out. Fading the content away leaves the page's own
+       dark background on screen for a few hundred milliseconds — a blank green
+       flash between two perfectly good screens. Better to hold the splash fully
+       painted right up to the moment the browser swaps documents. */
 
     .band{display:flex;flex-direction:column;align-items:center;width:100%}
     .band.mid{gap:var(--gap);flex:1;justify-content:center;padding:var(--gap) 0}
@@ -213,8 +215,18 @@
     .btn.alt{margin-top:8px;background:#fff;color:var(--green);
       border:1.5px solid var(--green)}
     .err{min-height:16px;margin-top:6px;font-size:12.5px;font-weight:600;color:#c53030}
-    .a2hs{margin-top:14px;padding:12px 14px;border-radius:12px;font-size:12px;
+    .a2hs{margin-top:12px;padding:12px 14px;border-radius:12px;font-size:12px;
       line-height:1.55;background:#f0f7f2;border:1px solid #cfe6d8;color:var(--green-d)}
+    .a2hs.okmsg{background:#e6f4ec;border-color:#b7ddc6}
+    .btn.install{display:flex;align-items:center;justify-content:center;gap:9px;
+      background:#2b6cb0}
+    .btn.install span{font-size:17px;line-height:1}
+    /* A labelled rule, so "Home screen" reads as its own concern rather than
+       another field in the form above it. */
+    .divider{display:flex;align-items:center;gap:10px;margin:18px 0 4px;
+      font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+      color:#9aa5b1}
+    .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--line)}
     .hidden{display:none}
 
     /* Anyone who has asked their phone to calm down gets a still screen. */
@@ -352,10 +364,19 @@
       <div class="err" id="bothErr"></div>
       <button class="btn" onclick="saveBoth()">Save</button>
       <button class="btn alt" onclick="closeSettings()">Cancel</button>
-      <div class="a2hs" id="a2hs">
+
+      <div class="divider"><span>Home screen</span></div>
+
+      <button class="btn install" id="installBtn" onclick="installApp()">
+        <span>&#128241;</span> Install QRoll on this phone</button>
+      <div class="a2hs hidden" id="a2hs">
         <b>Add QRoll to your home screen</b><br>
         <span id="a2hsText">Open your browser menu and choose
           <b>Add to Home screen</b>.</span>
+      </div>
+      <div class="a2hs okmsg hidden" id="installedNote">
+        <b>&#10003; QRoll is installed</b><br>
+        You are already running it from the home screen.
       </div>
     </div>
 
@@ -543,16 +564,14 @@
 
   function goNow(){
     if (leaving || !QROLL_URL) return;
-    // A preview is for checking a colleague's link, not for being thrown into
-    // their console — so it waits to be tapped rather than leaving on its own.
     leaving = true;
     clearTimeout(timer);
-    document.getElementById('splash').classList.add('leaving');
-    setTimeout(function(){
-      // replace() rather than href: pressing Back from the console should leave
-      // the app, not bounce into a splash that immediately redirects again.
-      window.location.replace(QROLL_URL);
-    }, 380);
+    // Straight over, with the splash still fully painted. No fade: the browser
+    // keeps showing this document until the next one is ready to paint, so a
+    // hand-off with nothing in between is the cleanest thing available.
+    // replace() rather than href, so pressing Back from the console leaves the
+    // app instead of bouncing into a splash that redirects again.
+    window.location.replace(QROLL_URL);
   }
 
   // ---------- first run / settings ----------
@@ -637,29 +656,90 @@
     e.stopPropagation();
   });
 
-  // Tailor the "add to home screen" wording to the device.
-  (function tailorHint(){
-    var el = document.getElementById('a2hsText');
-    if (!el) return;
-    var standalone = false;
+  /* =====================================================================
+     INSTALL TO THE HOME SCREEN
+
+     Chrome on Android fires `beforeinstallprompt` when it decides the page is
+     installable. Holding on to that event lets the Install button open the real
+     system dialog rather than telling the teacher to go hunting in a menu.
+
+     iOS never fires it — Safari has no programmatic install — so there the
+     button reveals the exact tap sequence instead. Either way the teacher taps
+     one thing labelled "Install".
+     ===================================================================== */
+  var installEvent = null;
+
+  function isStandalone(){
     try {
-      standalone = (window.matchMedia &&
-                    window.matchMedia('(display-mode: standalone)').matches) ||
-                   window.navigator.standalone === true;
-    } catch(e){}
-    if (standalone) {
-      document.getElementById('a2hs').classList.add('hidden');
+      return (window.matchMedia &&
+              window.matchMedia('(display-mode: standalone)').matches) ||
+             window.navigator.standalone === true;
+    } catch(e){ return false; }
+  }
+
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();          // keep it for our own button
+    installEvent = e;
+    refreshInstallUi();
+  });
+
+  window.addEventListener('appinstalled', function(){
+    installEvent = null;
+    refreshInstallUi(true);
+  });
+
+  function refreshInstallUi(justInstalled){
+    var btn  = document.getElementById('installBtn');
+    var hint = document.getElementById('a2hs');
+    var done = document.getElementById('installedNote');
+    if (!btn) return;
+    if (justInstalled || isStandalone()) {
+      btn.classList.add('hidden');
+      hint.classList.add('hidden');
+      done.classList.remove('hidden');
       return;
     }
+    done.classList.add('hidden');
+    btn.classList.remove('hidden');
+  }
+
+  function installApp(){
+    if (installEvent) {
+      installEvent.prompt();
+      var choice = installEvent.userChoice;
+      installEvent = null;                     // a prompt can only be used once
+      if (choice && choice.then) {
+        choice.then(function(res){
+          if (res && res.outcome === 'accepted') refreshInstallUi(true);
+          else showManualHint();               // declined — offer the manual route
+        });
+      }
+      return;
+    }
+    showManualHint();
+  }
+
+  // No native prompt available (iOS, or Chrome has not offered one yet):
+  // spell out the taps for this particular browser.
+  function showManualHint(){
+    var el = document.getElementById('a2hsText');
     var ua = navigator.userAgent;
     if (/iPhone|iPad|iPod/.test(ua)) {
-      el.innerHTML = 'In <b>Safari</b>, tap <b>Share</b>, then <b>Add to Home Screen</b>. ' +
+      el.innerHTML = 'In <b>Safari</b>, tap <b>Share</b> (the box with an arrow), ' +
+                     'then <b>Add to Home Screen</b>. ' +
                      '(Chrome on iPhone can’t do this — use Safari.)';
     } else if (/Android/.test(ua)) {
       el.innerHTML = 'In <b>Chrome</b>, tap the <b>⋮</b> menu, then ' +
                      '<b>Add to Home screen</b> or <b>Install app</b>.';
+    } else {
+      el.innerHTML = 'Look for an <b>install</b> icon in the address bar, or open ' +
+                     'your browser menu and choose <b>Install</b> / ' +
+                     '<b>Add to Home screen</b>.';
     }
-  })();
+    document.getElementById('a2hs').classList.remove('hidden');
+  }
+
+  refreshInstallUi();
 
   // A service worker makes Chrome treat this as an installable app rather than
   // a bookmark, which is what gets you the real icon instead of a screenshot.
