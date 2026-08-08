@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  QRoll launcher.
+  QRoll launcher — single splash screen.
 
   Why this file exists
   --------------------
@@ -11,7 +11,8 @@
   the generic Google "G".
 
   This page is a real top-level document, so the home-screen shortcut gets the
-  QRoll logo, and it opens the Apps Script app with one tap.
+  QRoll logo. It shows for three seconds and then hands straight over to the
+  teacher console's PIN screen.
 
   ONE page serves the whole department
   ------------------------------------
@@ -20,9 +21,10 @@
   ?u=<their exec url> and remembers it in localStorage on that phone. A teacher
   who arrives without the parameter is asked to paste their link once.
 
-  That means it is published ONCE, by one person, and every colleague just opens
-  a link and taps "Add to Home screen". Nobody else needs a GitHub account or
-  any technical setup.
+  There is deliberately NO second screen. The splash carries the greeting, the
+  quote, the credits and everything else; the only time an input appears is the
+  first launch on a phone, when QRoll genuinely does not yet know the teacher's
+  name or their app link.
 
   DEFAULT_URL below is optional — set it to your own /exec URL if you want the
   bare link to open your console.
@@ -39,203 +41,210 @@
   <link rel="icon" type="image/png" sizes="192x192" href="qroll-icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="qroll-icon-512.png">
 
-  <meta name="theme-color" content="#1f6f43">
+  <meta name="theme-color" content="#12492c">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="QRoll">
-  <meta name="description" content="QRoll attendance — Govt. College Bhoranj (Tarkwari)">
+  <meta name="description" content="QRoll — a teacher centric academic management system">
 
   <style>
     :root{
-      --green:#1f6f43; --green-d:#155232; --accent:#2b6cb0;
-      --bg:#eef2f0; --card:#fff; --line:#e2e8f0; --ink:#1a202c; --muted:#6b7280;
+      --green:#1f6f43; --green-d:#12492c; --green-x:#0c3520;
+      --ink:#1a202c; --line:#e2e8f0; --muted:#6b7280;
+      --cream:#f3f8f4;
+      /* Vertical rhythm. One scale drives the whole screen, so the layout
+         stays in proportion from a 5" phone to a desktop window. */
+      --gap:clamp(9px, 2.1vh, 16px);
     }
     *{box-sizing:border-box}
-    html,body{height:100%}
+    html,body{height:100%;margin:0}
     body{
-      margin:0;background:linear-gradient(160deg,#eef2f0,#dfeae3);color:var(--ink);
+      background:var(--green-d);color:#fff;
       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
       -webkit-font-smoothing:antialiased;
-      display:flex;align-items:center;justify-content:center;
-      padding:24px calc(20px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom))
-              calc(20px + env(safe-area-inset-left));
+      -webkit-tap-highlight-color:transparent;
     }
-    .card{
-      background:var(--card);border-radius:22px;padding:32px 26px 26px;
-      width:100%;max-width:400px;text-align:center;
-      box-shadow:0 14px 40px rgba(21,82,50,.14);
-    }
-    .logo{width:96px;height:96px;border-radius:22px;display:block;margin:0 auto 16px;
-      box-shadow:0 4px 14px rgba(0,0,0,.10)}
-    h1{margin:0;font-size:30px;font-weight:800;letter-spacing:-.01em;color:var(--green-d)}
-    .tag{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
-      color:var(--green);opacity:.85;margin-top:5px}
-    .sub{font-size:13px;color:var(--muted);margin:10px 0 24px;line-height:1.45}
-    a.btn,button.btn{
-      display:flex;align-items:center;justify-content:center;gap:9px;
-      width:100%;padding:15px 18px;margin-bottom:11px;border:none;border-radius:14px;
-      font-size:16px;font-weight:700;text-decoration:none;cursor:pointer;
-      background:var(--green);color:#fff;transition:transform .05s,filter .15s;
-      font-family:inherit;
-    }
-    a.btn:active,button.btn:active{transform:scale(.98)}
-    a.btn:hover,button.btn:hover{filter:brightness(1.06)}
-    a.btn.alt{background:#fff;color:var(--green);border:2px solid var(--green)}
-    .hint{
-      margin-top:18px;padding:13px 15px;border-radius:13px;font-size:12.5px;
-      line-height:1.5;background:#f0f7f2;border:1px solid #cfe6d8;color:var(--green-d);
-      text-align:left;
-    }
-    .hint b{font-weight:800}
-    .hintwarn{margin-top:9px;padding-top:9px;border-top:1px solid #cfe6d8;
-      font-size:12px;line-height:1.5;color:#166534}
-    .warn{background:#fef3c7;border-color:#fcd34d;color:#92400e}
-    .credit{margin-top:18px;font-size:11px;color:#94a3b8;line-height:1.5}
-    .linkbtn{background:none;border:none;color:var(--muted);font-size:12px;
-      font-weight:600;text-decoration:underline;cursor:pointer;margin-top:12px;
-      font-family:inherit;padding:4px}
-    .linkbtn:hover{color:var(--green)}
-    input[type=url]{
-      width:100%;font-size:15px;padding:12px 13px;border:1.5px solid var(--line);
-      border-radius:11px;font-family:inherit;margin:10px 0 4px;
-    }
-    input[type=url]:focus{outline:none;border-color:var(--green)}
-    .setup{text-align:left}
-    .setup h2{font-size:17px;margin:0 0 6px;color:var(--green-d)}
-    .setup p{font-size:13px;color:var(--muted);line-height:1.5;margin:0 0 4px}
-    .setup ol{font-size:13px;color:var(--muted);line-height:1.6;margin:8px 0 0 18px;padding:0}
-    .err{color:#c53030;font-size:12.5px;font-weight:600;min-height:16px;margin-top:6px}
-    .hidden{display:none}
 
-    /* ================= OPENING SPLASH =================
-       Shown for a few seconds on every launch, then it fades and hands over to
-       the card underneath. Everything rolls up from below in sequence, so the
-       screen reads top to bottom the way it would be spoken aloud.
-
-       The tricolour and the Independence Day line appear only between 1 and 16
-       August. The national flag is not decoration to be left on a screen all
-       year, and a greeting that lingers into September stops meaning anything. */
+    /* ================== THE SPLASH ==================
+       One screen, three bands: emblem, identity, credits. `space-between`
+       distributes the slack rather than letting it pile up at the bottom, so
+       the composition stays centred on any handset. */
     .splash{
-      position:fixed;inset:0;z-index:999;display:flex;flex-direction:column;
-      align-items:center;justify-content:center;gap:0;text-align:center;
-      padding:32px 22px calc(32px + env(safe-area-inset-bottom));
-      background:radial-gradient(120% 90% at 50% 0%,#1f6f43 0%,#155232 55%,#0e3b23 100%);
-      color:#fff;cursor:pointer;
-      transition:opacity .55s ease,transform .55s ease;
-      /* Belt and braces: the splash clears itself in pure CSS even if the
-         script never runs. A splash that cannot be dismissed is not a splash,
-         it is a locked door. JS normally beats this to it at 3.4s. */
-      animation:spAutoHide .6s ease 4.6s forwards;
+      position:relative;min-height:100dvh;min-height:100vh;
+      display:flex;flex-direction:column;align-items:center;
+      justify-content:space-between;text-align:center;
+      padding:calc(env(safe-area-inset-top) + clamp(20px,4.5vh,40px))
+              20px
+              calc(env(safe-area-inset-bottom) + clamp(14px,3vh,26px));
+      background:
+        radial-gradient(85% 55% at 50% -8%, rgba(90,190,135,.30) 0%, rgba(90,190,135,0) 62%),
+        radial-gradient(70% 45% at 50% 108%, rgba(0,0,0,.34) 0%, rgba(0,0,0,0) 60%),
+        linear-gradient(168deg,#1f6f43 0%,#12492c 52%,#0c3520 100%);
+      overflow-y:auto;cursor:pointer;
+      transition:opacity .45s ease;
     }
-    @keyframes spAutoHide{to{opacity:0;visibility:hidden;pointer-events:none}}
-    .splash.gone{opacity:0;transform:scale(1.04);pointer-events:none}
+    .splash.leaving{opacity:0}
 
-    /* Each element rises into place, one after the next. */
-    .sp-item{opacity:0;transform:translateY(30px);
-      animation:spRollUp .85s cubic-bezier(.22,.9,.28,1) forwards}
-    @keyframes spRollUp{to{opacity:1;transform:translateY(0)}}
-    .sp-flagwrap{animation-delay:.05s}
-    .sp-logo   {animation-delay:.30s}
-    .sp-title  {animation-delay:.45s}
-    .sp-tag    {animation-delay:.60s}
-    .sp-sub    {animation-delay:.75s}
-    .sp-ind    {animation-delay:.92s}
-    .sp-init   {animation-delay:1.10s}
-    .sp-skip   {animation-delay:1.60s}
+    .band{display:flex;flex-direction:column;align-items:center;width:100%}
+    .band.mid{gap:var(--gap);flex:1;justify-content:center;padding:var(--gap) 0}
 
-    .sp-flagwrap{margin-bottom:20px;perspective:700px}
-    .sp-flag{position:relative;width:172px;height:115px;
+    /* ---- Each line rises into place, in reading order ---- */
+    .up{opacity:0;transform:translateY(26px);
+      animation:rise .8s cubic-bezier(.22,.9,.28,1) forwards}
+    @keyframes rise{to{opacity:1;transform:translateY(0)}}
+    .d1{animation-delay:.05s} .d2{animation-delay:.16s} .d3{animation-delay:.27s}
+    .d4{animation-delay:.38s} .d5{animation-delay:.49s} .d6{animation-delay:.60s}
+    .d7{animation-delay:.71s} .d8{animation-delay:.82s} .d9{animation-delay:.93s}
+
+    /* ---- Tricolour (1–16 August only) ---- */
+    .flagwrap{perspective:700px;margin-bottom:calc(var(--gap) * .4)}
+    .flag{position:relative;width:clamp(112px,30vw,150px);aspect-ratio:3/2;
       transform-origin:left center;
-      animation:spWave 3.4s ease-in-out infinite;
-      filter:drop-shadow(0 6px 14px rgba(0,0,0,.35))}
-    /* A gentle furl, not a cartoon flap. */
-    @keyframes spWave{
+      animation:wave 3.6s ease-in-out infinite;
+      filter:drop-shadow(0 5px 12px rgba(0,0,0,.35))}
+    @keyframes wave{
       0%,100%{transform:rotateY(0deg)   skewY(0deg)}
-      25%    {transform:rotateY(-11deg) skewY(1.1deg)}
+      25%    {transform:rotateY(-10deg) skewY(1deg)}
       50%    {transform:rotateY(0deg)   skewY(0deg)}
-      75%    {transform:rotateY(9deg)   skewY(-1deg)}
+      75%    {transform:rotateY(8deg)   skewY(-.9deg)}
     }
-    /* Light sliding across the folds sells the movement more than the
+    /* Light travelling across the folds sells the motion better than the
        geometry does. */
-    .sp-flag::after{
-      content:'';position:absolute;inset:0;border-radius:2px;pointer-events:none;
+    .flag::after{content:'';position:absolute;inset:0;border-radius:2px;
+      pointer-events:none;
       background:linear-gradient(105deg,rgba(255,255,255,0) 30%,
-        rgba(255,255,255,.42) 48%,rgba(255,255,255,0) 66%);
-      background-size:260% 100%;
-      animation:spShine 3.4s ease-in-out infinite;
-    }
-    @keyframes spShine{0%,100%{background-position:130% 0}50%{background-position:-30% 0}}
-    .sp-flag svg{display:block;width:100%;height:100%;border-radius:2px}
-    .sp-chakra{transform-origin:150px 100px;animation:spSpin 9s linear infinite}
-    @keyframes spSpin{to{transform:rotate(360deg)}}
-    .sp-pole{position:absolute;left:-9px;top:-12px;bottom:-30px;width:4px;
-      border-radius:3px;background:linear-gradient(#d8dee6,#8b96a5)}
-    .sp-pole::before{content:'';position:absolute;left:-3px;top:-9px;
-      width:10px;height:10px;border-radius:50%;
+        rgba(255,255,255,.40) 48%,rgba(255,255,255,0) 66%);
+      background-size:260% 100%;animation:shine 3.6s ease-in-out infinite}
+    @keyframes shine{0%,100%{background-position:130% 0}50%{background-position:-30% 0}}
+    .flag svg{display:block;width:100%;height:100%;border-radius:2px}
+    .chakra{transform-origin:150px 100px;animation:spin 10s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .pole{position:absolute;left:-8px;top:-10px;bottom:-22px;width:3.5px;
+      border-radius:3px;background:linear-gradient(#e2e8f0,#8b96a5)}
+    .pole::before{content:'';position:absolute;left:-3px;top:-8px;
+      width:9px;height:9px;border-radius:50%;
       background:radial-gradient(circle at 35% 32%,#fff6c9,#d4a017)}
 
-    .sp-logo{width:78px;height:78px;border-radius:19px;
-      box-shadow:0 6px 20px rgba(0,0,0,.30)}
-    .sp-title{margin:12px 0 0;font-size:42px;font-weight:800;letter-spacing:-.02em;
-      line-height:1}
-    .sp-tag{margin-top:7px;font-size:12px;font-weight:700;letter-spacing:.30em;
-      text-transform:uppercase;color:#bfe6cf}
-    .sp-sub{margin-top:11px;font-size:14.5px;font-weight:600;color:#eaf5ee;
-      line-height:1.45;max-width:330px}
+    /* ---- Identity ---- */
+    .logo{width:clamp(66px,18vw,88px);height:auto;border-radius:20px;
+      box-shadow:0 8px 24px rgba(0,0,0,.34)}
+    .wordmark{margin:0;font-size:clamp(34px,10.5vw,46px);font-weight:800;
+      letter-spacing:-.025em;line-height:1}
+    .tagline{font-size:clamp(9.5px,2.6vw,11.5px);font-weight:700;
+      letter-spacing:.30em;text-transform:uppercase;color:#a9dcc0}
 
-    .sp-ind{margin-top:20px;padding:11px 20px 13px;border-radius:14px;
+    /* A hairline that separates the product from the person. */
+    .rule{width:clamp(120px,40vw,190px);height:2px;border-radius:2px;
+      background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.42),
+        rgba(255,255,255,0))}
+    .rule.tri{background:linear-gradient(90deg,
+      rgba(255,153,51,0) 0%,#FF9933 18%,#fff 50%,#138808 82%,rgba(19,136,8,0) 100%)}
+
+    /* ---- Greeting + quote ---- */
+    .greet{font-size:clamp(17px,4.8vw,22px);font-weight:700;line-height:1.3;
+      max-width:22ch}
+    .quote{max-width:clamp(240px,78vw,340px);font-size:clamp(11.5px,3vw,13px);
+      font-style:italic;line-height:1.6;color:#cfe8da}
+    .quote .by{display:block;margin-top:4px;font-style:normal;font-size:10.5px;
+      font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:#8fc2a5}
+
+    /* ---- Independence Day (1–16 August only) ---- */
+    .ind{position:relative;overflow:hidden;padding:9px 20px 11px;border-radius:13px;
       background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.22);
-      font-size:16px;font-weight:800;line-height:1.3;position:relative;
-      overflow:hidden}
-    .sp-ind small{display:block;margin-top:3px;font-size:11px;font-weight:600;
-      letter-spacing:.16em;text-transform:uppercase;color:#cfe8da}
-    /* A tricolour rule under the greeting, drawn on itself. */
-    .sp-ind::after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;
+      font-size:clamp(13px,3.7vw,16px);font-weight:800;line-height:1.3}
+    .ind small{display:block;margin-top:2px;font-size:9.5px;font-weight:600;
+      letter-spacing:.18em;text-transform:uppercase;color:#cfe8da}
+    .ind::after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;
       background:linear-gradient(90deg,#FF9933 0 33.33%,#fff 33.33% 66.66%,#138808 66.66%)}
 
-    .sp-init{margin-top:26px;font-size:12px;line-height:1.6;color:#b9d9c7}
-    .sp-init b{display:block;margin-top:2px;font-size:13px;color:#fff;font-weight:700}
-    .sp-skip{position:absolute;left:0;right:0;
-      bottom:calc(18px + env(safe-area-inset-bottom));
-      font-size:11px;letter-spacing:.14em;text-transform:uppercase;
-      color:rgba(255,255,255,.55);opacity:0;
-      animation:spRollUp .8s ease forwards;animation-delay:1.6s}
+    .system{font-size:clamp(12px,3.3vw,14px);font-weight:600;color:#e8f4ec;
+      line-height:1.45;max-width:26ch}
 
-    /* Anyone who has asked their phone to calm down gets a still splash. */
+    /* ---- Credits ---- */
+    .band.bot{gap:calc(var(--gap) * .55)}
+    .initiative{font-size:clamp(10.5px,2.8vw,11.5px);line-height:1.55;color:#9fcdb4}
+    .initiative b{display:block;margin-top:1px;font-size:clamp(11.5px,3vw,12.5px);
+      color:#fff;font-weight:700}
+    .version{font-size:10px;font-weight:700;letter-spacing:.16em;
+      text-transform:uppercase;color:#78ab8e;
+      border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:3px 11px}
+    .devby{font-size:clamp(10.5px,2.8vw,11.5px);line-height:1.55;color:#b6d8c5}
+    .devby b{font-weight:700;color:#fff}
+
+    /* ---- Countdown: something is about to happen, and you can see it ---- */
+    .progress{position:absolute;left:0;right:0;bottom:0;height:3px;
+      background:rgba(255,255,255,.14)}
+    .progress i{display:block;height:100%;width:0;
+      background:linear-gradient(90deg,#FF9933,#ffffff,#138808)}
+    .progress i.run{animation:fill var(--wait,3000ms) linear forwards}
+    @keyframes fill{to{width:100%}}
+
+    .gear{position:absolute;top:calc(env(safe-area-inset-top) + 10px);right:12px;
+      width:38px;height:38px;border:none;border-radius:50%;cursor:pointer;
+      background:rgba(255,255,255,.12);color:#dcefe3;font-size:16px;line-height:1;
+      opacity:0;animation:rise .8s ease forwards;animation-delay:1.1s}
+    .gear:hover{background:rgba(255,255,255,.22)}
+
+    /* ================== FIRST-RUN SHEET ==================
+       Only ever seen when QRoll does not yet know the teacher's name or their
+       app link, or when they deliberately open settings. Not a second screen in
+       the normal flow — the normal flow is splash, then console. */
+    .sheet{position:fixed;inset:0;z-index:50;display:flex;align-items:center;
+      justify-content:center;padding:22px;cursor:default;
+      background:rgba(6,32,20,.62);backdrop-filter:blur(5px)}
+    .sheetcard{width:100%;max-width:380px;background:#fff;color:var(--ink);
+      border-radius:20px;padding:24px 22px;text-align:left;
+      box-shadow:0 20px 50px rgba(0,0,0,.35);
+      animation:rise .38s cubic-bezier(.22,.9,.28,1) forwards;opacity:0}
+    .sheetcard h2{margin:0 0 6px;font-size:18px;color:var(--green-d)}
+    .sheetcard p{margin:0 0 10px;font-size:13px;color:var(--muted);line-height:1.55}
+    .sheetcard ol{margin:8px 0 0 18px;padding:0;font-size:12.5px;color:var(--muted);
+      line-height:1.65}
+    .sheetcard label{display:block;font-size:11.5px;font-weight:700;color:#4a5568;
+      margin:12px 0 4px}
+    .sheetcard input{width:100%;font-size:16px;padding:12px 13px;font-family:inherit;
+      border:1.5px solid var(--line);border-radius:11px}
+    .sheetcard input:focus{outline:none;border-color:var(--green)}
+    .btn{display:block;width:100%;margin-top:14px;padding:14px 18px;border:none;
+      border-radius:13px;font-size:15.5px;font-weight:700;cursor:pointer;
+      background:var(--green);color:#fff;font-family:inherit}
+    .btn:active{transform:scale(.985)}
+    .btn.alt{margin-top:8px;background:#fff;color:var(--green);
+      border:1.5px solid var(--green)}
+    .err{min-height:16px;margin-top:6px;font-size:12.5px;font-weight:600;color:#c53030}
+    .a2hs{margin-top:14px;padding:12px 14px;border-radius:12px;font-size:12px;
+      line-height:1.55;background:#f0f7f2;border:1px solid #cfe6d8;color:var(--green-d)}
+    .hidden{display:none}
+
+    /* Anyone who has asked their phone to calm down gets a still screen. */
     @media (prefers-reduced-motion: reduce){
-      .sp-item{animation-duration:.01ms;animation-delay:0ms;opacity:1;transform:none}
-      .sp-flag,.sp-flag::after,.sp-chakra{animation:none}
-      .sp-skip{opacity:1;animation:none}
+      .up,.gear,.sheetcard{animation-duration:.01ms;animation-delay:0ms;
+        opacity:1;transform:none}
+      .flag,.flag::after,.chakra{animation:none}
+      .progress i.run{animation-duration:.01ms}
     }
-
-    input[type=text]{
-      width:100%;font-size:16px;padding:12px 13px;border:1.5px solid var(--line);
-      border-radius:11px;font-family:inherit;margin:10px 0 4px;
+    /* Very short screens: drop the flourishes before dropping the content. */
+    @media (max-height:620px){
+      :root{--gap:8px}
+      .rule{display:none}
     }
-    input[type=text]:focus{outline:none;border-color:var(--green)}
-    /* The greeting replaces the generic sub-line once the teacher is known. */
-    .greet{font-size:19px;font-weight:800;color:var(--green-d);line-height:1.35;
-      margin:2px 0 4px}
-    .greetsub{font-size:12px;color:var(--muted);margin:0 0 20px}
-    .namebtn{background:none;border:none;color:var(--muted);font-size:11.5px;
-      font-weight:600;text-decoration:underline;cursor:pointer;font-family:inherit;
-      padding:3px;margin-top:2px}
-    .namebtn:hover{color:var(--green)}
   </style>
 </head>
 <body>
-  <!-- Opening splash. Content is injected by JS only where it depends on the
-       date; everything else is static so it still reads if scripting fails. -->
-  <div class="splash" id="splash" onclick="dismissSplash()">
-    <div class="sp-flagwrap sp-item hidden" id="spFlagWrap">
-      <div class="sp-flag">
-        <span class="sp-pole"></span>
+
+<main class="splash" id="splash" onclick="goNow()">
+
+  <!-- ---------- band 1: emblem ---------- -->
+  <div class="band top">
+    <div class="flagwrap up d1 hidden" id="flagWrap">
+      <div class="flag">
+        <span class="pole"></span>
         <svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <rect x="0" y="0"      width="300" height="66.67" fill="#FF9933"/>
           <rect x="0" y="66.67"  width="300" height="66.66" fill="#FFFFFF"/>
           <rect x="0" y="133.33" width="300" height="66.67" fill="#138808"/>
-          <g class="sp-chakra" fill="none" stroke="#000080"
+          <g class="chakra" fill="none" stroke="#000080"
              stroke-width="1.15" stroke-linecap="round">
             <circle cx="150" cy="100" r="25" stroke-width="2.3"/>
             <circle cx="150" cy="100" r="4.2" fill="#000080" stroke="none"/>
@@ -267,93 +276,91 @@
         </svg>
       </div>
     </div>
+  </div>
 
-    <img class="sp-logo sp-item" src="qroll-icon-192.png" alt="QRoll">
-    <h1 class="sp-title sp-item">QRoll</h1>
-    <div class="sp-tag sp-item">Scan &middot; Present &middot; Done</div>
-    <div class="sp-sub sp-item">A Teacher Centric Academic Management System</div>
+  <!-- ---------- band 2: who this is for ---------- -->
+  <div class="band mid">
+    <img class="logo up d2" src="qroll-icon-192.png" alt="QRoll" width="88" height="88">
+    <div>
+      <h1 class="wordmark up d3">QRoll</h1>
+      <div class="tagline up d3" style="margin-top:6px">Scan &middot; Present &middot; Done</div>
+    </div>
 
-    <div class="sp-ind sp-item hidden" id="spInd"></div>
+    <div class="rule up d4" id="rule"></div>
 
-    <div class="sp-init sp-item">
+    <div class="greet up d5" id="greet"></div>
+    <div class="quote up d6" id="quote"></div>
+
+    <div class="ind up d7 hidden" id="ind"></div>
+
+    <div class="system up d8">A Teacher Centric Academic Management System</div>
+  </div>
+
+  <!-- ---------- band 3: credits ---------- -->
+  <div class="band bot">
+    <div class="initiative up d9">
       A Digital Initiative of
       <b>Government College Bhoranj (Tarkwari)</b>
     </div>
-    <div class="sp-skip">tap to continue</div>
+    <div class="version up d9">Version 1.0</div>
+    <div class="devby up d9">
+      Developed by: <b>Dr. Prince Thakur</b><br>
+      Assistant Professor (Botany)
+    </div>
   </div>
 
+  <button class="gear" id="gear" onclick="event.stopPropagation();openSettings()"
+          aria-label="Settings">&#9881;</button>
+  <div class="progress"><i id="bar"></i></div>
+</main>
 
-  <main class="card">
-    <img class="logo" src="qroll-icon-192.png" alt="QRoll logo">
-    <h1>QRoll</h1>
-    <div class="tag">Scan. Present. Done.</div>
+<!-- First run / settings. Never seen once the phone knows both answers. -->
+<div class="sheet hidden" id="sheet">
+  <div class="sheetcard">
 
-    <!-- One randomized, time-aware greeting, shown only once the teacher's
-         name is known. Replaced by the plain college line until then. -->
-    <div id="greetBox" class="hidden">
-      <p class="greet" id="greetLine"></p>
-      <p class="greetsub">Govt. College Bhoranj (Tarkwari)</p>
-    </div>
-    <p class="sub" id="sub">Govt. College Bhoranj (Tarkwari)</p>
-
-    <!-- First launch on this phone: ask who this is. -->
-    <div id="welcome" class="setup hidden">
+    <div id="askName" class="hidden">
       <h2>Welcome to QRoll</h2>
       <p>Tell QRoll your name once. It is stored on this phone only — it never
-        leaves the device and is never sent anywhere.</p>
-      <label for="nameInput" style="display:block;font-size:12px;font-weight:700;
-        color:#4a5568;margin-top:10px">Teacher Name</label>
-      <input type="text" id="nameInput" autocomplete="name"
-             placeholder="Dr. Prince Thakur">
+         leaves the device and is never sent anywhere.</p>
+      <label for="nameInput">Teacher Name</label>
+      <input type="text" id="nameInput" autocomplete="name" placeholder="Dr. Prince Thakur">
       <div class="err" id="nameErr"></div>
       <button class="btn" onclick="saveName()">Save &amp; Continue</button>
-      <button class="linkbtn hidden" id="nameCancel" onclick="afterName()">Skip for now</button>
     </div>
 
-    <!-- Normal view: this phone knows which QRoll app to open -->
-    <div id="ready" class="hidden">
-      <a class="btn" id="teacherBtn" href="#">👩‍🏫 Open Teacher Console</a>
-
-      <div class="hint" id="a2hs">
-        <b>Add QRoll to your home screen</b><br>
-        <span id="a2hsText">Open your browser menu and choose <b>Add to Home screen</b>.</span>
-        <div class="hintwarn">
-          Do it <b>from this page</b>, before tapping the button above. If the
-          address bar says <b>script.google.com</b> you've gone too far — come
-          back here first, or you'll get a plain grey icon.
-        </div>
-      </div>
-
-      <div class="hint warn hidden" id="previewNote">
-        <b>Preview only.</b><br>
-        You're seeing this link the way your colleague will. Nothing was saved —
-        your own QRoll is untouched.
-      </div>
-
-      <button class="linkbtn" onclick="showSetup()">Use a different QRoll link</button>
-      <button class="namebtn" onclick="showWelcome(true)">Change name</button>
-    </div>
-
-    <!-- First run on a phone that arrived without ?u= -->
-    <div id="setup" class="setup hidden">
+    <div id="askUrl" class="hidden">
       <h2>One-time setup</h2>
-      <p>Paste your own QRoll app link below. You only do this once on this phone.</p>
+      <p>Paste your own QRoll app link. You only do this once on this phone.</p>
       <ol>
         <li>Open your attendance <b>Google Sheet</b> on a computer.</li>
-        <li>Menu: <b>⚙ Attendance Setup → Show my app link</b>.</li>
-        <li>Copy the <b>Teacher console</b> link and paste it here.</li>
+        <li>Menu: <b>&#9881; Attendance Setup &rarr; Show my app link</b>.</li>
+        <li>Copy the <b>Teacher console</b> link and paste it below.</li>
       </ol>
+      <label for="urlInput">QRoll app link</label>
       <input type="url" id="urlInput" inputmode="url" autocomplete="off"
              placeholder="https://script.google.com/macros/s/…/exec">
       <div class="err" id="urlErr"></div>
-      <button class="btn" onclick="saveUrl()">Save &amp; continue</button>
-      <button class="linkbtn hidden" id="cancelBtn" onclick="showReady()">Cancel</button>
+      <button class="btn" onclick="saveUrl()">Save &amp; Continue</button>
     </div>
 
-    <div class="credit">
-      Created by Dr. Prince Thakur<br>Assistant Professor (Botany)
+    <div id="askBoth" class="hidden">
+      <h2>Settings</h2>
+      <label for="nameInput2">Teacher Name</label>
+      <input type="text" id="nameInput2" autocomplete="name">
+      <label for="urlInput2">QRoll app link</label>
+      <input type="url" id="urlInput2" inputmode="url" autocomplete="off">
+      <div class="err" id="bothErr"></div>
+      <button class="btn" onclick="saveBoth()">Save</button>
+      <button class="btn alt" onclick="closeSettings()">Cancel</button>
+      <div class="a2hs" id="a2hs">
+        <b>Add QRoll to your home screen</b><br>
+        <span id="a2hsText">Open your browser menu and choose
+          <b>Add to Home screen</b>.</span>
+      </div>
     </div>
-  </main>
+
+  </div>
+</div>
 
 <script>
   /* ====================== OPTIONAL DEFAULT ======================
@@ -364,23 +371,23 @@
   var DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbxYC-UiFf0jCCmG_WEuWEZ4J5mFYsVnDRz8FeAUKGwJS4-uqqyUWLWwTztVXFE6zPs8hg/exec';
   /* ============================================================== */
 
-  var KEY = 'qroll_exec_url';
+  var WAIT_MS   = 3000;                    // splash holds for three seconds
+  var URL_KEY   = 'qroll_exec_url';
+  var NAME_KEY  = 'qroll_teacher_name';
+
+  // ---------- storage ----------
+  function read(k){ try { return (localStorage.getItem(k) || '').trim(); } catch(e){ return ''; } }
+  function write(k, v){ try { localStorage.setItem(k, v); } catch(e){ /* private mode */ } }
+  function storedName(){ return read(NAME_KEY); }
 
   function isExec(u){
-    return /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_\-]+\/exec/.test(String(u || '').trim());
-  }
-
-  function stored(){
-    try { return localStorage.getItem(KEY) || ''; } catch(e){ return ''; }
-  }
-
-  function remember(u){
-    try { localStorage.setItem(KEY, u); } catch(e){ /* private mode — session only */ }
+    return /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_\-]+\/exec/
+      .test(String(u || '').trim());
   }
 
   var PREVIEW = false;
 
-  // Resolve which QRoll app this phone should open, in priority order:
+  // Which QRoll app should this phone open, in priority order:
   // ?u= in the link  >  what this phone saved earlier  >  the built-in default.
   //
   // &preview=1 uses the link for THIS page load only, without claiming the
@@ -390,22 +397,19 @@
     var param = '', preview = false;
     try {
       var q = new URLSearchParams(window.location.search);
-      param = q.get('u') || '';
+      param = (q.get('u') || '').trim();
       preview = q.get('preview') === '1';
     } catch(e){ /* very old browser */ }
-    param = param.trim();
 
     if (isExec(param)) {
       if (preview) { PREVIEW = true; return param; }
-      remember(param);
+      write(URL_KEY, param);
       // Drop ?u= from the address bar so the installed app's start_url is clean
       // and the link can't be re-shared with someone else's console attached.
-      try {
-        history.replaceState(null, '', window.location.pathname);
-      } catch(e){}
+      try { history.replaceState(null, '', window.location.pathname); } catch(e){}
       return param;
     }
-    var saved = stored();
+    var saved = read(URL_KEY);
     if (isExec(saved)) return saved;
     if (isExec(DEFAULT_URL)) return DEFAULT_URL;
     return '';
@@ -414,43 +418,17 @@
   var QROLL_URL = resolveUrl();
 
   /* =====================================================================
-     PERSONAL GREETING
+     GREETING
 
-     The launcher is a plain static page with no server and no account, so the
-     teacher's name lives in this browser's localStorage and nowhere else. It
-     is never transmitted; the Apps Script app never sees it.
-
-     On every launch after the first, EXACTLY ONE greeting is shown, picked at
-     random from English, Hindi and French, and matched to the time of day.
-     One language at a time — three greetings stacked on top of each other
-     would be a novelty, not a welcome.
+     One greeting per launch, picked at random from English, Hindi and French
+     and matched to the time of day. One language at a time — three stacked on
+     top of each other would be a novelty, not a welcome.
      ===================================================================== */
-
-  var NAME_KEY = 'qroll_teacher_name';
-
-  // Greetings by part of day. Each language supplies its own wording, and the
-  // name is appended after a comma, which reads correctly in all three.
   var GREETINGS = {
-    morning: [
-      'Good Morning',        // English
-      'सुप्रभात',              // Hindi
-      'Bonjour'              // French
-    ],
-    afternoon: [
-      'Good Afternoon',
-      'नमस्कार',
-      'Bon après-midi'
-    ],
-    evening: [
-      'Good Evening',
-      'शुभ संध्या',
-      'Bonsoir'
-    ],
-    night: [
-      'Good Night',
-      'शुभ रात्रि',
-      'Bonne nuit'
-    ]
+    morning:   ['Good Morning',   'सुप्रभात',    'Bonjour'],
+    afternoon: ['Good Afternoon', 'नमस्कार',     'Bon après-midi'],
+    evening:   ['Good Evening',   'शुभ संध्या',   'Bonsoir'],
+    night:     ['Good Night',     'शुभ रात्रि',   'Bonne nuit']
   };
 
   function partOfDay(){
@@ -461,97 +439,142 @@
     return 'night';
   }
 
-  function storedName(){
-    try { return (localStorage.getItem(NAME_KEY) || '').trim(); } catch(e){ return ''; }
+  function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+
+  /* =====================================================================
+     TEACHING QUOTES
+
+     Shown under the greeting, one at random per launch. Kept to lines that are
+     genuinely attributable — a misattributed quote on a teacher's own screen is
+     a small daily embarrassment. Proverbs are labelled as proverbs rather than
+     given a convenient famous name.
+     ===================================================================== */
+  var QUOTES = [
+    ['Education is the most powerful weapon which you can use to change the world.', 'Nelson Mandela'],
+    ['A teacher affects eternity; he can never tell where his influence stops.', 'Henry Adams'],
+    ['The art of teaching is the art of assisting discovery.', 'Mark Van Doren'],
+    ['Education is the manifestation of the perfection already in man.', 'Swami Vivekananda'],
+    ['The whole purpose of education is to turn mirrors into windows.', 'Sydney J. Harris'],
+    ['The teacher who is indeed wise does not bid you enter the house of his wisdom, but leads you to the threshold of your own mind.', 'Kahlil Gibran'],
+    ['Children must be taught how to think, not what to think.', 'Margaret Mead'],
+    ['A good teacher can inspire hope, ignite the imagination, and instill a love of learning.', 'Brad Henry'],
+    ['The mediocre teacher tells. The good teacher explains. The superior teacher demonstrates. The great teacher inspires.', 'William Arthur Ward'],
+    ['The highest education is that which does not merely give us information but makes our life in harmony with all existence.', 'Rabindranath Tagore'],
+    ['Teaching is a very noble profession that shapes the character, calibre and future of an individual.', 'Dr. A. P. J. Abdul Kalam'],
+    ['The end-product of education should be a free creative man.', 'Dr. S. Radhakrishnan'],
+    ['Awake, arise and educate; smash traditions and liberate.', 'Savitribai Phule'],
+    ['Teachers open the door, but you must enter by yourself.', 'Chinese proverb'],
+    ['By learning you will teach; by teaching you will learn.', 'Latin proverb']
+  ];
+
+  /* =====================================================================
+     INDEPENDENCE DAY
+
+     India became independent on 15 August 1947, and that day counts as the
+     FIRST Independence Day — so the ordinal is (year - 1946). 2026 gives the
+     80th, 2027 the 81st, and it stays right for good without anyone editing a
+     number each August.
+
+     The flag and the greeting appear from 1 to 16 August inclusive, every year.
+     Outside that window the screen is plain QRoll green: a national flag is not
+     wallpaper, and a festival greeting still up in October reads as neglect.
+     ===================================================================== */
+  var IND_FROM = 1, IND_TO = 16, IND_FIRST_YEAR = 1946;
+
+  function ordinalSuffix(n){
+    var t = n % 100;
+    if (t >= 11 && t <= 13) return 'th';
+    if (n % 10 === 1) return 'st';
+    if (n % 10 === 2) return 'nd';
+    if (n % 10 === 3) return 'rd';
+    return 'th';
   }
 
-  function rememberName(n){
-    try { localStorage.setItem(NAME_KEY, n); } catch(e){ /* private mode */ }
+  function independenceInfo(now){
+    var d = now || new Date();
+    if (d.getMonth() !== 7) return null;            // 7 = August
+    var day = d.getDate();
+    if (day < IND_FROM || day > IND_TO) return null;
+    var n = d.getFullYear() - IND_FIRST_YEAR;
+    if (n < 1) return null;
+    return { n: n, text: 'Happy ' + n + ordinalSuffix(n) + ' Independence Day' };
   }
 
-  // Build the single greeting for this launch.
-  function greetingFor(name){
-    var pool = GREETINGS[partOfDay()];
-    var pick = pool[Math.floor(Math.random() * pool.length)];
-    return pick + ', ' + name;
-  }
-
-  function paintGreeting(){
-    var name = storedName();
-    var box = document.getElementById('greetBox');
-    var sub = document.getElementById('sub');
-    if (!name) {
-      box.classList.add('hidden');
-      sub.classList.remove('hidden');
-      return;
-    }
-    document.getElementById('greetLine').textContent = greetingFor(name);
-    box.classList.remove('hidden');
-    sub.classList.add('hidden');
-  }
-
-  function hideAllViews(){
-    ['ready', 'setup', 'welcome'].forEach(function(id){
-      document.getElementById(id).classList.add('hidden');
+  function esc(s){
+    return String(s).replace(/[&<>"]/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c];
     });
   }
 
-  // `optional` is true when the teacher chose "Change name" and already has one,
-  // so they can back out without losing what is saved.
-  function showWelcome(optional){
-    hideAllViews();
-    document.getElementById('welcome').classList.remove('hidden');
-    document.getElementById('greetBox').classList.add('hidden');
-    document.getElementById('sub').classList.remove('hidden');
-    var input = document.getElementById('nameInput');
-    input.value = storedName();
-    document.getElementById('nameErr').textContent = '';
-    document.getElementById('nameCancel')
-      .classList.toggle('hidden', !optional && !storedName());
-    input.focus();
+  // ---------- paint ----------
+  function paint(){
+    var name = storedName();
+    document.getElementById('greet').textContent =
+      name ? (pick(GREETINGS[partOfDay()]) + ', ' + name) : 'Welcome to QRoll';
+
+    var q = pick(QUOTES);
+    document.getElementById('quote').innerHTML =
+      '“' + esc(q[0]) + '”<span class="by">' + esc(q[1]) + '</span>';
+
+    var info = independenceInfo();
+    if (info) {
+      document.getElementById('flagWrap').classList.remove('hidden');
+      var box = document.getElementById('ind');
+      box.innerHTML = esc(info.text) + '<small>15 August &middot; Jai Hind</small>';
+      box.classList.remove('hidden');
+      document.getElementById('rule').classList.add('tri');
+    }
   }
+
+  // ---------- hand over to the console ----------
+  var timer = null, leaving = false;
+
+  function startCountdown(){
+    var bar = document.getElementById('bar');
+    document.getElementById('splash').style.setProperty('--wait', WAIT_MS + 'ms');
+    bar.classList.add('run');
+    timer = setTimeout(goNow, WAIT_MS);
+  }
+
+  function cancelCountdown(){
+    clearTimeout(timer); timer = null;
+    document.getElementById('bar').classList.remove('run');
+  }
+
+  function goNow(){
+    if (leaving || !QROLL_URL) return;
+    // A preview is for checking a colleague's link, not for being thrown into
+    // their console — so it waits to be tapped rather than leaving on its own.
+    leaving = true;
+    clearTimeout(timer);
+    document.getElementById('splash').classList.add('leaving');
+    setTimeout(function(){
+      // replace() rather than href: pressing Back from the console should leave
+      // the app, not bounce into a splash that immediately redirects again.
+      window.location.replace(QROLL_URL);
+    }, 380);
+  }
+
+  // ---------- first run / settings ----------
+  function showSheet(which){
+    cancelCountdown();
+    document.getElementById('sheet').classList.remove('hidden');
+    ['askName','askUrl','askBoth'].forEach(function(id){
+      document.getElementById(id).classList.toggle('hidden', id !== which);
+    });
+    var first = document.querySelector('#' + which + ' input');
+    if (first) first.focus();
+  }
+
+  function hideSheet(){ document.getElementById('sheet').classList.add('hidden'); }
 
   function saveName(){
     var v = document.getElementById('nameInput').value.trim();
-    if (!v) {
-      document.getElementById('nameErr').textContent = 'Please enter your name.';
-      return;
-    }
-    if (v.length > 60) {
-      document.getElementById('nameErr').textContent = 'That name looks too long.';
-      return;
-    }
-    rememberName(v);
-    afterName();
-  }
-
-  // Once the name question is settled, carry on with the normal flow.
-  function afterName(){
-    paintGreeting();
-    if (QROLL_URL) showReady(); else showSetup();
-  }
-
-  function showReady(){
-    hideAllViews();
-    document.getElementById('ready').classList.remove('hidden');
-    paintGreeting();
-    if (!storedName()) document.getElementById('sub').classList.remove('hidden');
-    document.getElementById('teacherBtn').href = QROLL_URL;
-    document.getElementById('previewNote').classList.toggle('hidden', !PREVIEW);
-    // Don't invite an install while previewing someone else's console.
-    if (PREVIEW) document.getElementById('a2hs').classList.add('hidden');
-  }
-
-  function showSetup(){
-    hideAllViews();
-    document.getElementById('setup').classList.remove('hidden');
-    document.getElementById('greetBox').classList.add('hidden');
-    document.getElementById('sub').classList.remove('hidden');
-    var input = document.getElementById('urlInput');
-    input.value = QROLL_URL || '';
-    // "Cancel" only makes sense if there's something to go back to.
-    document.getElementById('cancelBtn').classList.toggle('hidden', !QROLL_URL);
-    input.focus();
+    var err = document.getElementById('nameErr');
+    if (!v)            { err.textContent = 'Please enter your name.'; return; }
+    if (v.length > 60) { err.textContent = 'That name looks too long.'; return; }
+    write(NAME_KEY, v);
+    hideSheet(); boot();
   }
 
   function saveUrl(){
@@ -564,101 +587,74 @@
         : 'Paste your QRoll app link first.';
       return;
     }
-    err.textContent = '';
-    remember(v);
-    QROLL_URL = v;
-    showReady();
+    write(URL_KEY, v); QROLL_URL = v;
+    hideSheet(); boot();
   }
 
-  /* =====================================================================
-     OPENING SPLASH  +  INDEPENDENCE DAY
-
-     India became independent on 15 August 1947, and that day is counted as the
-     FIRST Independence Day — so the ordinal is (year - 1946). 2026 gives the
-     80th, 2027 the 81st, and it keeps itself right for good without anyone
-     editing a number each August.
-
-     The greeting and the tricolour show from 1 to 16 August inclusive, every
-     year. Outside that window the splash is plain QRoll green: a national flag
-     is not wallpaper, and a festival greeting still on screen in October reads
-     as neglect rather than warmth.
-     ===================================================================== */
-
-  var SPLASH_MS = 3400;          // how long the splash holds before fading
-  var IND_FROM  = 1;             // 1 August
-  var IND_TO    = 16;            // 16 August, inclusive
-  var IND_FIRST_YEAR = 1946;     // 15 Aug 1947 = the 1st Independence Day
-
-  function ordinalSuffix(n){
-    var t = n % 100;
-    if (t >= 11 && t <= 13) return 'th';
-    if (n % 10 === 1) return 'st';
-    if (n % 10 === 2) return 'nd';
-    if (n % 10 === 3) return 'rd';
-    return 'th';
+  function openSettings(){
+    document.getElementById('nameInput2').value = storedName();
+    document.getElementById('urlInput2').value  = QROLL_URL || '';
+    document.getElementById('bothErr').textContent = '';
+    showSheet('askBoth');
   }
 
-  // Returns null outside the window, otherwise { n, ordinal, text }.
-  function independenceInfo(now){
-    var d = now || new Date();
-    if (d.getMonth() !== 7) return null;                 // 7 = August
-    var day = d.getDate();
-    if (day < IND_FROM || day > IND_TO) return null;
-    var n = d.getFullYear() - IND_FIRST_YEAR;
-    if (n < 1) return null;
-    return { n: n, ordinal: n + ordinalSuffix(n),
-             text: 'Happy ' + n + ordinalSuffix(n) + ' Independence Day' };
+  function saveBoth(){
+    var n = document.getElementById('nameInput2').value.trim();
+    var u = document.getElementById('urlInput2').value.trim();
+    var err = document.getElementById('bothErr');
+    if (!n)         { err.textContent = 'Please enter your name.'; return; }
+    if (!isExec(u)) { err.textContent = 'That doesn’t look like a QRoll app link.'; return; }
+    write(NAME_KEY, n); write(URL_KEY, u); QROLL_URL = u;
+    hideSheet(); paint(); boot();
   }
 
-  function paintSplash(){
-    var info = independenceInfo();
-    if (!info) return;
-    document.getElementById('spFlagWrap').classList.remove('hidden');
-    var box = document.getElementById('spInd');
-    box.innerHTML = info.text + '<small>15 August &middot; Jai Hind</small>';
-    box.classList.remove('hidden');
+  function closeSettings(){ hideSheet(); boot(); }
+
+  // ---------- boot ----------
+  // Ask only for what is genuinely missing, then get out of the way.
+  function boot(){
+    if (!storedName())  { showSheet('askName'); return; }
+    if (!QROLL_URL)     { showSheet('askUrl');  return; }
+    if (PREVIEW)        { return; }              // tap to continue instead
+    startCountdown();
   }
 
-  var splashTimer = null;
-  function dismissSplash(){
-    var s = document.getElementById('splash');
-    if (!s || s.classList.contains('gone')) return;
-    clearTimeout(splashTimer);
-    s.classList.add('gone');
-    // Taken out of the layout once the fade finishes, so it can never sit
-    // invisibly on top of the buttons underneath.
-    setTimeout(function(){ s.style.display = 'none'; }, 600);
-  }
+  paint();
+  boot();
 
-  paintSplash();
-  splashTimer = setTimeout(dismissSplash, SPLASH_MS);
-  // A tap should always get you past it, however slow the animation feels.
-  document.getElementById('splash')
-          .addEventListener('touchstart', dismissSplash, { passive: true });
-
-  document.getElementById('urlInput').addEventListener('keyup', function(e){
-    if (e.key === 'Enter') saveUrl();
-  });
-  document.getElementById('nameInput').addEventListener('keyup', function(e){
-    if (e.key === 'Enter') saveName();
+  ['nameInput','urlInput','nameInput2','urlInput2'].forEach(function(id){
+    document.getElementById(id).addEventListener('keyup', function(e){
+      if (e.key !== 'Enter') return;
+      if (id === 'nameInput') saveName();
+      else if (id === 'urlInput') saveUrl();
+      else saveBoth();
+    });
   });
 
-  // First launch on this phone asks for the name. Every launch after that goes
-  // straight to a greeting and the button.
-  if (!storedName()) showWelcome(false);
-  else afterName();
+  // Tap on the sheet backdrop should not fall through to the splash.
+  document.getElementById('sheet').addEventListener('click', function(e){
+    if (e.target === this) { /* keep it open — the answer is required */ }
+    e.stopPropagation();
+  });
 
-  // Tailor the "add to home screen" wording to the device, and hide the hint
-  // entirely once the app is already running from the home screen.
+  // Tailor the "add to home screen" wording to the device.
   (function tailorHint(){
-    var standalone = window.matchMedia('(display-mode: standalone)').matches ||
-                     window.navigator.standalone === true;
-    if (standalone) { document.getElementById('a2hs').classList.add('hidden'); return; }
-    var ua = navigator.userAgent;
     var el = document.getElementById('a2hsText');
+    if (!el) return;
+    var standalone = false;
+    try {
+      standalone = (window.matchMedia &&
+                    window.matchMedia('(display-mode: standalone)').matches) ||
+                   window.navigator.standalone === true;
+    } catch(e){}
+    if (standalone) {
+      document.getElementById('a2hs').classList.add('hidden');
+      return;
+    }
+    var ua = navigator.userAgent;
     if (/iPhone|iPad|iPod/.test(ua)) {
-      el.innerHTML = 'In <b>Safari</b>, tap the <b>Share</b> button, then ' +
-                     '<b>Add to Home Screen</b>. (Chrome on iPhone can\'t do this — use Safari.)';
+      el.innerHTML = 'In <b>Safari</b>, tap <b>Share</b>, then <b>Add to Home Screen</b>. ' +
+                     '(Chrome on iPhone can’t do this — use Safari.)';
     } else if (/Android/.test(ua)) {
       el.innerHTML = 'In <b>Chrome</b>, tap the <b>⋮</b> menu, then ' +
                      '<b>Add to Home screen</b> or <b>Install app</b>.';
