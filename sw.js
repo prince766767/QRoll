@@ -9,11 +9,9 @@
  * Apps Script app: attendance must never be served from a stale cache.
  */
 
-/* Bump this version string EVERY time you change index.html, manifest.json or
-   an icon. The shell is served cache-first, so an installed phone keeps showing
-   the old page until the cache name changes — a new name makes this worker
-   install fresh and delete the previous cache on activate. */
-var CACHE = 'qroll-launcher-v3';
+/* Bump this version string whenever an ICON or the manifest changes.
+   index.html no longer depends on it — see the fetch handler below. */
+var CACHE = 'qroll-launcher-v4';
 var SHELL = [
   './',
   './index.html',
@@ -42,6 +40,13 @@ self.addEventListener('activate', function (e) {
   );
 });
 
+// Is this request for the launcher page itself (rather than an icon)?
+function isPage_(request, url) {
+  return request.mode === 'navigate' ||
+         url.pathname === '/' ||
+         /\/(index\.html)?$/.test(url.pathname);
+}
+
 self.addEventListener('fetch', function (e) {
   var url = new URL(e.request.url);
 
@@ -49,20 +54,48 @@ self.addEventListener('fetch', function (e) {
   // script.google.com (or anywhere else) goes straight to the network.
   if (e.request.method !== 'GET' || url.origin !== self.location.origin) return;
 
-  // ignoreSearch matters: colleagues arrive at index.html?u=<their app>, which
-  // must still hit the cached shell rather than miss and pile up one cache
-  // entry per teacher.
+  // Never let the worker cache itself — that makes future updates stickier
+  // than they already are.
+  if (url.pathname.indexOf('sw.js') >= 0) return;
+
+  /* THE PAGE: network first.
+   *
+   * The previous version served index.html cache-first, which meant an
+   * installed phone kept showing an old launcher until somebody remembered to
+   * bump the cache name. Forgetting that once is enough to convince a teacher
+   * the update never arrived, so the page no longer depends on anyone
+   * remembering: with signal it is always fetched fresh and the copy in the
+   * cache is refreshed behind it; with no signal the cached copy is served, so
+   * the launcher still opens on a dead network. */
+  if (isPage_(e.request, url)) {
+    e.respondWith(
+      fetch(e.request).then(function (res) {
+        if (res && res.ok && !url.search) {
+          var copy = res.clone();
+          caches.open(CACHE).then(function (c) { c.put('./index.html', copy); });
+        }
+        return res;
+      }).catch(function () {
+        return caches.match('./index.html', { ignoreSearch: true });
+      })
+    );
+    return;
+  }
+
+  /* ICONS AND MANIFEST: cache first — they are large, they change rarely, and
+   * the home-screen icon should appear instantly.
+   *
+   * ignoreSearch matters: colleagues arrive at index.html?u=<their app>, which
+   * must still hit the cached shell rather than miss and pile up one cache
+   * entry per teacher. */
   e.respondWith(
     caches.match(e.request, { ignoreSearch: true }).then(function (hit) {
       return hit || fetch(e.request).then(function (res) {
-        // Only ever cache the canonical, query-free URL.
         if (res && res.ok && !url.search) {
           var copy = res.clone();
           caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
         }
         return res;
-      }).catch(function () {
-        return caches.match('./index.html');
       });
     })
   );
