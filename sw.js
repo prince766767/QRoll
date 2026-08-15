@@ -11,7 +11,7 @@
 
 /* Bump this version string whenever an ICON or the manifest changes.
    index.html no longer depends on it — see the fetch handler below. */
-var CACHE = 'qroll-launcher-v6';
+var CACHE = 'qroll-launcher-v7';
 var SHELL = [
   './',
   './index.html',
