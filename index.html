@@ -175,6 +175,14 @@
     .devby b{font-weight:700;color:#fff}
 
     /* ---- Countdown: something is about to happen, and you can see it ---- */
+    .offbox{margin:18px auto 0;max-width:340px;background:#ffffff;color:#1a2b22;
+      border-radius:14px;padding:16px;text-align:left;box-shadow:0 8px 28px rgba(0,0,0,.28)}
+    .offbox b{display:block;font-size:15px;margin-bottom:6px}
+    .offbox p{margin:0 0 12px;font-size:13px;line-height:1.45;color:#4a5568}
+    .offbtn{display:block;text-align:center;text-decoration:none;background:#1f6f43;
+      color:#fff;font-weight:700;font-size:15px;padding:13px;border-radius:10px}
+    .offlink{display:block;width:100%;margin-top:8px;background:none;border:0;
+      color:#6b7280;font:inherit;font-size:13px;padding:6px;cursor:pointer}
     .progress{position:absolute;left:0;right:0;bottom:0;height:3px;
       background:rgba(255,255,255,.14)}
     .progress i{display:block;height:100%;width:0;
@@ -306,6 +314,18 @@
     <div class="ind up d7 hidden" id="ind"></div>
 
     <div class="system up d8">A Teacher Centric Academic Management System</div>
+
+    <!-- Shown INSTEAD of the hand-off when there is no connection. The console
+         lives on script.google.com and cannot be cached by anyone, so with no
+         signal there is nothing to hand over to — offering Quick Attendance is
+         the only useful thing this screen can do. -->
+    <div class="offbox hidden" id="offBox" onclick="event.stopPropagation()">
+      <b>&#128721; No internet connection</b>
+      <p>The full QRoll console needs a connection. Quick Attendance does not —
+         you can mark the class now and it will upload by itself later.</p>
+      <a class="offbtn" href="./quick.html">&#9889; Open Quick Attendance</a>
+      <button class="offlink" onclick="retryOnline()">Try the console again</button>
+    </div>
   </div>
 
   <!-- ---------- band 3: credits ---------- -->
@@ -573,8 +593,27 @@
     document.getElementById('bar').classList.remove('run');
   }
 
+  // With no signal there is nothing to hand over to: the console is served by
+  // Apps Script from Google's domain, which no service worker of ours can ever
+  // cache. Offer Quick Attendance instead of dropping the teacher on a browser
+  // error page — which is what happened before this existed.
+  function showOffline(){
+    cancelCountdown();
+    document.getElementById('offBox').classList.remove('hidden');
+  }
+
+  function retryOnline(){
+    if (!navigator.onLine){
+      alert('Still no connection. Quick Attendance works without one.');
+      return;
+    }
+    document.getElementById('offBox').classList.add('hidden');
+    goNow();
+  }
+
   function goNow(){
     if (leaving || !QROLL_URL) return;
+    if (!navigator.onLine){ showOffline(); return; }
     leaving = true;
     clearTimeout(timer);
     // Straight over, with the splash still fully painted. No fade: the browser
@@ -646,8 +685,21 @@
     if (!storedName())  { showSheet('askName'); return; }
     if (!QROLL_URL)     { showSheet('askUrl');  return; }
     if (PREVIEW)        { return; }              // tap to continue instead
+    // Decide before the countdown, not after it expires — a teacher standing
+    // in a classroom should not watch a progress bar fill just to be handed a
+    // "no internet" error at the end of it.
+    if (!navigator.onLine) { showOffline(); return; }
     startCountdown();
   }
+
+  // If signal returns while the offline card is up, resume the normal hand-off.
+  window.addEventListener('online', function(){
+    var box = document.getElementById('offBox');
+    if (box && !box.classList.contains('hidden')){
+      box.classList.add('hidden');
+      startCountdown();
+    }
+  });
 
   paint();
   boot();
