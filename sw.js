@@ -11,10 +11,11 @@
 
 /* Bump this version string whenever an ICON or the manifest changes.
    index.html no longer depends on it — see the fetch handler below. */
-var CACHE = 'qroll-launcher-v4';
+var CACHE = 'qroll-launcher-v5';
 var SHELL = [
   './',
   './index.html',
+  './quick.html',
   './manifest.json',
   './qroll-icon-192.png',
   './qroll-icon-512.png',
@@ -40,8 +41,19 @@ self.addEventListener('activate', function (e) {
   );
 });
 
+// Is this request for the offline Quick Attendance app?
+//
+// It gets its own branch because it must be served CACHE FIRST. It is the one
+// page that has to open with no signal at all, and a network-first page has to
+// wait for a fetch to fail before it falls back — which on a flaky classroom
+// connection is the difference between opening instantly and hanging.
+function isQuick_(url) {
+  return /\/quick\.html$/.test(url.pathname);
+}
+
 // Is this request for the launcher page itself (rather than an icon)?
 function isPage_(request, url) {
+  if (isQuick_(url)) return false;      // handled by its own branch above
   return request.mode === 'navigate' ||
          url.pathname === '/' ||
          /\/(index\.html)?$/.test(url.pathname);
@@ -57,6 +69,27 @@ self.addEventListener('fetch', function (e) {
   // Never let the worker cache itself — that makes future updates stickier
   // than they already are.
   if (url.pathname.indexOf('sw.js') >= 0) return;
+
+  /* QUICK ATTENDANCE: cache first, refreshed in the background.
+   *
+   * Offline attendance is the whole point of this page, so it never waits on
+   * the network to render. A fresh copy is fetched behind the served one and
+   * lands on the next open. */
+  if (isQuick_(url)) {
+    e.respondWith(
+      caches.match('./quick.html', { ignoreSearch: true }).then(function (hit) {
+        var net = fetch(e.request).then(function (res) {
+          if (res && res.ok) {
+            var copy = res.clone();
+            caches.open(CACHE).then(function (c) { c.put('./quick.html', copy); });
+          }
+          return res;
+        });
+        return hit || net;
+      })
+    );
+    return;
+  }
 
   /* THE PAGE: network first.
    *

@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f6f43">
+<title>QRoll — Quick Attendance</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./qroll-icon-192.png">
+<link rel="apple-touch-icon" href="./qroll-icon-192.png">
+<style>
+:root{--g:#1f6f43;--bg:#eef2f0;--ink:#1a2b22;--mut:#6b7280;--line:#d8e2dc;
+      --amber:#b45309;--red:#b91c1c}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+     background:var(--bg);color:var(--ink)}
+header{background:var(--g);color:#fff;padding:12px 14px;position:sticky;top:0;z-index:5;
+       padding-top:calc(12px + env(safe-area-inset-top))}
+header h1{margin:0;font-size:16px;font-weight:700;letter-spacing:.2px}
+.wrap{padding:14px;max-width:640px;margin:0 auto;
+      padding-bottom:calc(90px + env(safe-area-inset-bottom))}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;
+      padding:5px 10px;border-radius:999px;background:#fff2;color:#fff}
+button{font:inherit;border:0;border-radius:10px;padding:11px 14px;background:var(--g);
+       color:#fff;font-weight:600;cursor:pointer}
+button.ghost{background:#fff;color:var(--g);border:1.5px solid var(--g)}
+button.mut{background:#fff;color:var(--mut);border:1.5px solid var(--line)}
+button:disabled{opacity:.5}
+input,select,textarea{font:inherit;padding:10px;border:1.5px solid var(--line);
+       border-radius:10px;width:100%;background:#fff;color:var(--ink)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.muted{color:var(--mut);font-size:13px}
+.hidden{display:none!important}
+h2{font-size:15px;margin:0 0 10px}
+.stu{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.stu:last-child{border-bottom:0}
+.stu .nm{flex:1;min-width:0}
+.stu .nm b{display:block;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stu .nm span{font-size:12px;color:var(--mut)}
+.seg{display:flex;gap:4px}
+.seg button{padding:7px 9px;font-size:12px;font-weight:700;background:#f1f5f3;
+            color:var(--mut);border:1.5px solid transparent;border-radius:8px;min-width:38px}
+.seg button[aria-pressed="true"]{background:var(--g);color:#fff}
+.seg button.a[aria-pressed="true"]{background:var(--red)}
+.seg button.l[aria-pressed="true"]{background:var(--amber)}
+.seg button.d[aria-pressed="true"]{background:#1d4ed8}
+.bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);
+     padding:12px 14px;padding-bottom:calc(12px + env(safe-area-inset-bottom));
+     display:flex;gap:8px;justify-content:center}
+.bar button{flex:1;max-width:280px}
+.note{border-left:3px solid var(--g);background:#f4faf6;padding:10px 12px;border-radius:0 8px 8px 0;
+      font-size:13.5px;margin-bottom:12px}
+.warn{border-left-color:var(--amber);background:#fffaf0}
+.ok{color:var(--g);font-weight:600}
+.err{color:var(--red);font-weight:600}
+.cls{display:block;width:100%;text-align:left;background:#fff;color:var(--ink);
+     border:1.5px solid var(--line);margin-bottom:8px;font-weight:600}
+.cls span{display:block;font-weight:400;font-size:12.5px;color:var(--mut);margin-top:2px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="row" style="justify-content:space-between">
+    <h1>QRoll — Quick Attendance</h1>
+    <span class="pill" id="statusPill">…</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ---------- pairing ---------- -->
+  <section id="setupView" class="hidden">
+    <div class="card">
+      <h2>Set up offline attendance</h2>
+      <p class="muted">In the QRoll teacher console, open
+        <b>⚙ Settings → Offline Quick Attendance</b> and tap
+        <b>Enable on this device</b>. Copy the pairing code it shows and paste
+        it below. The code is shown once.</p>
+      <textarea id="pairInput" rows="4" placeholder="Paste pairing code"></textarea>
+      <div class="row" style="margin-top:10px">
+        <button onclick="pair()">Pair this device</button>
+      </div>
+      <p class="muted" id="pairMsg" style="margin-bottom:0"></p>
+    </div>
+    <div class="note">
+      Pairing stores a token for <b>this app only</b>. It can read your class
+      lists and submit attendance — nothing else. It cannot open the console,
+      read marks or change settings, and you can revoke it from the console at
+      any time. Your 6-digit PIN is not stored here.
+    </div>
+  </section>
+
+  <!-- ---------- class picker ---------- -->
+  <section id="classView" class="hidden">
+    <div id="syncNote"></div>
+    <div class="card">
+      <h2>Choose a class</h2>
+      <div id="classList"></div>
+      <p class="muted" id="rosterAge"></p>
+    </div>
+    <div class="row">
+      <button class="mut" onclick="refreshRoster()">↻ Update class lists</button>
+      <button class="mut" onclick="openLog()">Pending sessions</button>
+    </div>
+  </section>
+
+  <!-- ---------- marking ---------- -->
+  <section id="markView" class="hidden">
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div><b id="markClass"></b><span class="muted" id="markDate"></span></div>
+        <button class="mut" onclick="backToClasses()">✕</button>
+      </div>
+      <div class="row" style="margin:10px 0">
+        <button class="ghost" onclick="markAll('Present')">Mark all present</button>
+        <span class="muted" id="tally"></span>
+      </div>
+      <div id="studentList"></div>
+    </div>
+  </section>
+
+  <!-- ---------- pending log ---------- -->
+  <section id="logView" class="hidden">
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <h2 style="margin:0">Pending sessions</h2>
+        <button class="mut" onclick="backToClasses()">✕</button>
+      </div>
+      <div id="logList" style="margin-top:10px"></div>
+    </div>
+    <div class="row">
+      <button onclick="syncNow()">Sync now</button>
+      <button class="mut" onclick="unpair()">Unpair this device</button>
+    </div>
+  </section>
+
+</div>
+
+<div class="bar hidden" id="saveBar">
+  <button onclick="finalize()" id="saveBtn">Save attendance</button>
+</div>
+
+<script>
+'use strict';
+/* ===========================================================================
+   QRoll offline Quick Attendance.
+
+   WHY THIS FILE EXISTS, AND WHY IT IS NOT THE TEACHER CONSOLE
+   The console is served by Apps Script inside an iframe on Google's domain. A
+   service worker is same-origin only, so no worker we control can ever cache
+   it, and google.script.run does not exist without a network. Offline
+   attendance therefore has to live on an origin we own — this one.
+
+   WHAT IT TALKS TO
+   The teacher's own /exec deployment, over one POST. Nothing central, no
+   shared server, no other teacher's data reachable from here.
+
+   PERFORMANCE RULES OBSERVED HERE
+     · IndexedDB is opened lazily, on first real use — never at startup.
+     · No polling. Sync runs on load, on 'online', on tab-visible and on the
+       explicit button. Nothing else wakes it.
+     · One request per session, never one per student.
+     · Marking a student writes to memory only; the single durable write
+       happens once, when the teacher saves.
+   =========================================================================== */
+
+var CFG_KEY = 'qroll.offline.cfg';
+var DB_NAME = 'qroll-offline', DB_VER = 1;
+var STORE_PENDING = 'pending', STORE_META = 'meta';
+var STATUSES = ['Present', 'Absent', 'On Leave', 'On Duty'];
+var SHORT = { 'Present': 'P', 'Absent': 'A', 'On Leave': 'L', 'On Duty': 'OD' };
+
+var cfg = null;          // {u, d, t}
+var roster = null;       // {classes:[{className,students:[{roll,name}]}], fetchedAt}
+var draft = null;        // {className, date, marks:{roll:status}}
+var dbP = null;          // lazily created IndexedDB promise
+var syncing = false;
+
+/* ---------- tiny helpers ---------- */
+function $(id) { return document.getElementById(id); }
+function esc(s) {
+  return String(s === null || s === undefined ? '' : s)
+    .replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+}
+function show(id) {
+  ['setupView', 'classView', 'markView', 'logView'].forEach(function (v) {
+    $(v).classList.toggle('hidden', v !== id);
+  });
+  $('saveBar').classList.toggle('hidden', id !== 'markView');
+}
+function todayStr() {
+  var d = new Date(), p = function (n) { return (n < 10 ? '0' : '') + n; };
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+}
+// Same shape the server mints: 8 lowercase hex characters.
+function newSessionId() {
+  var a = new Uint8Array(4);
+  crypto.getRandomValues(a);
+  return Array.prototype.map.call(a, function (b) {
+    return ('0' + b.toString(16)).slice(-2);
+  }).join('');
+}
+
+/* ---------- config (small, synchronous, safe to read at startup) ---------- */
+function loadCfg() {
+  try { cfg = JSON.parse(localStorage.getItem(CFG_KEY) || 'null'); }
+  catch (e) { cfg = null; }
+  return cfg;
+}
+function saveCfg(c) { cfg = c; localStorage.setItem(CFG_KEY, JSON.stringify(c)); }
+
+/* ---------- IndexedDB, opened only when something actually needs it ------- */
+function db() {
+  if (dbP) return dbP;
+  dbP = new Promise(function (res, rej) {
+    var r = indexedDB.open(DB_NAME, DB_VER);
+    r.onupgradeneeded = function () {
+      var d = r.result;
+      if (!d.objectStoreNames.contains(STORE_PENDING)) {
+        d.createObjectStore(STORE_PENDING, { keyPath: 'sessionId' });
+      }
+      if (!d.objectStoreNames.contains(STORE_META)) {
+        d.createObjectStore(STORE_META, { keyPath: 'k' });
+      }
+    };
+    r.onsuccess = function () { res(r.result); };
+    r.onerror = function () { rej(r.error); };
+  });
+  return dbP;
+}
+function idb(store, mode, fn) {
+  return db().then(function (d) {
+    return new Promise(function (res, rej) {
+      var tx = d.transaction(store, mode);
+      var out = fn(tx.objectStore(store));
+      tx.oncomplete = function () { res(out && out.result !== undefined ? out.result : out); };
+      tx.onerror = function () { rej(tx.error); };
+    });
+  });
+}
+function putPending(rec) { return idb(STORE_PENDING, 'readwrite', function (s) { return s.put(rec); }); }
+function delPending(id) { return idb(STORE_PENDING, 'readwrite', function (s) { return s.delete(id); }); }
+function allPending() { return idb(STORE_PENDING, 'readonly', function (s) { return s.getAll(); }); }
+function putMeta(k, v) { return idb(STORE_META, 'readwrite', function (s) { return s.put({ k: k, v: v }); }); }
+function getMeta(k) {
+  return idb(STORE_META, 'readonly', function (s) { return s.get(k); })
+    .then(function (r) { return r ? r.v : null; });
+}
+
+/* ---------- transport ----------------------------------------------------
+   Content-Type must stay text/plain. Anything else triggers a CORS preflight,
+   and Apps Script cannot answer an OPTIONS request — the call would fail
+   before it ever reached doPost. The body is still JSON; only the header
+   differs. ----------------------------------------------------------------- */
+function call(action, extra) {
+  if (!cfg) return Promise.reject(new Error('This device is not paired.'));
+  var body = Object.assign({ action: action, deviceId: cfg.d, token: cfg.t }, extra || {});
+  return fetch(cfg.u, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(body),
+    redirect: 'follow'
+  }).then(function (r) { return r.json(); })
+    .then(function (j) {
+      if (!j || !j.ok) throw new Error((j && j.error) || 'Sync failed.');
+      return j;
+    });
+}
+
+/* ---------- status pill -------------------------------------------------- */
+function setStatus() {
+  return allPending().then(function (p) {
+    var n = (p || []).length, el = $('statusPill');
+    if (!navigator.onLine) {
+      el.textContent = n ? '🟠 Offline · ' + n + ' pending' : '🟠 Offline — Quick Attendance available';
+    } else if (n) {
+      el.textContent = '🟠 ' + n + ' session' + (n === 1 ? '' : 's') + ' pending sync';
+    } else {
+      el.textContent = '🟢 All attendance synced';
+    }
+    return n;
+  }).catch(function () { $('statusPill').textContent = navigator.onLine ? '🟢' : '🟠 Offline'; });
+}
+
+/* ---------- pairing ------------------------------------------------------ */
+function pair() {
+  var raw = ($('pairInput').value || '').trim();
+  if (!raw) { $('pairMsg').innerHTML = '<span class="err">Paste the pairing code first.</span>'; return; }
+  var o;
+  try {
+    var b = raw.replace(/-/g, '+').replace(/_/g, '/');
+    o = JSON.parse(decodeURIComponent(escape(atob(b))));
+  } catch (e) { o = null; }
+  if (!o || !o.u || !o.d || !o.t) {
+    $('pairMsg').innerHTML = '<span class="err">That code is not valid. Copy it again from the console.</span>';
+    return;
+  }
+  $('pairMsg').textContent = 'Checking…';
+  var prev = cfg; saveCfg({ u: o.u, d: o.d, t: o.t });
+  call('ping').then(function () {
+    $('pairMsg').innerHTML = '<span class="ok">✅ Paired. Fetching your class lists…</span>';
+    return refreshRoster(true);
+  }).catch(function (e) {
+    saveCfg(prev); cfg = prev;
+    $('pairMsg').innerHTML = '<span class="err">' + esc(e.message) + '</span>';
+  });
+}
+
+function unpair() {
+  allPending().then(function (p) {
+    if ((p || []).length &&
+        !confirm('You still have ' + p.length + ' session(s) waiting to sync. '
+          + 'Unpairing now means they can never be uploaded. Continue?')) return;
+    localStorage.removeItem(CFG_KEY); cfg = null; roster = null;
+    show('setupView');
+  });
+}
+
+/* ---------- roster ------------------------------------------------------- */
+function refreshRoster(quiet) {
+  if (!cfg) return Promise.resolve();
+  if (!navigator.onLine) { if (!quiet) alert('No internet. Your saved class lists are still usable.'); return Promise.resolve(); }
+  return call('roster').then(function (j) {
+    roster = j.roster;
+    return putMeta('roster', roster);
+  }).then(function () { renderClasses(); })
+    .catch(function (e) { if (!quiet) alert(e.message); });
+}
+
+function renderClasses() {
+  if (!roster || !roster.classes || !roster.classes.length) {
+    $('classList').innerHTML = '<p class="muted">No class lists stored yet. '
+      + 'Connect once while online and tap “Update class lists”.</p>';
+  } else {
+    $('classList').innerHTML = roster.classes.map(function (c) {
+      return '<button class="cls" onclick="startMark(\'' + esc(c.className).replace(/'/g, "\\'") + '\')">'
+        + esc(c.className) + '<span>' + c.students.length + ' students</span></button>';
+    }).join('');
+  }
+  if (roster && roster.fetchedAt) {
+    var d = new Date(roster.fetchedAt);
+    $('rosterAge').textContent = 'Class lists last updated ' + d.toLocaleString() + '.';
+  }
+  show('classView');
+  setStatus();
+  renderSyncNote();
+}
+
+function renderSyncNote() {
+  allPending().then(function (p) {
+    var n = (p || []).length;
+    $('syncNote').innerHTML = n
+      ? '<div class="note warn">' + n + ' saved session' + (n === 1 ? '' : 's')
+        + ' waiting to upload. ' + (navigator.onLine
+          ? 'Syncing…' : 'They will upload automatically when you are back online.')
+        + '</div>'
+      : '';
+  });
+}
+
+/* ---------- marking ------------------------------------------------------ */
+function startMark(className) {
+  var c = null;
+  roster.classes.forEach(function (x) { if (x.className === className) c = x; });
+  if (!c) return;
+  draft = { className: className, date: todayStr(), marks: {}, students: c.students };
+  // Absent is the safe default: a student is only ever recorded present
+  // because the teacher said so.
+  c.students.forEach(function (s) { draft.marks[s.roll] = 'Absent'; });
+  $('markClass').textContent = className;
+  $('markDate').textContent = '  ·  ' + draft.date;
+  renderStudents();
+  show('markView');
+}
+
+function renderStudents() {
+  $('studentList').innerHTML = draft.students.map(function (s) {
+    var cur = draft.marks[s.roll];
+    var segs = STATUSES.map(function (st) {
+      var cls = st === 'Absent' ? 'a' : st === 'On Leave' ? 'l' : st === 'On Duty' ? 'd' : '';
+      return '<button class="' + cls + '" aria-pressed="' + (cur === st) + '" '
+        + 'onclick="setMark(\'' + esc(s.roll).replace(/'/g, "\\'") + '\',\'' + st + '\')">'
+        + SHORT[st] + '</button>';
+    }).join('');
+    return '<div class="stu"><div class="nm"><b>' + esc(s.name) + '</b><span>'
+      + esc(s.roll) + '</span></div><div class="seg">' + segs + '</div></div>';
+  }).join('');
+  tally();
+}
+
+function setMark(roll, status) { draft.marks[roll] = status; renderStudents(); }
+function markAll(status) {
+  draft.students.forEach(function (s) { draft.marks[s.roll] = status; });
+  renderStudents();
+}
+function tally() {
+  var c = { Present: 0, Absent: 0, 'On Leave': 0, 'On Duty': 0 };
+  Object.keys(draft.marks).forEach(function (r) { c[draft.marks[r]]++; });
+  $('tally').textContent = c.Present + ' present · ' + c.Absent + ' absent'
+    + (c['On Leave'] ? ' · ' + c['On Leave'] + ' leave' : '')
+    + (c['On Duty'] ? ' · ' + c['On Duty'] + ' OD' : '');
+}
+
+/* Save. The teacher is told it worked the moment it is on the device — no
+   network call stands between them and that confirmation. */
+function finalize() {
+  var btn = $('saveBtn'); btn.disabled = true;
+  var rec = {
+    sessionId: newSessionId(),
+    className: draft.className,
+    date: draft.date,
+    capturedAt: new Date().toISOString(),
+    records: draft.students.map(function (s) {
+      return { roll: s.roll, status: draft.marks[s.roll] };
+    }),
+    savedAt: Date.now(), attempts: 0, lastError: ''
+  };
+  putPending(rec).then(function () {
+    btn.disabled = false;
+    alert('✅ Attendance saved on this device.\n\n' + rec.className + ' · ' + rec.date
+      + '\nIt will upload automatically when you are online.');
+    draft = null;
+    renderClasses();
+    trySync();
+  }).catch(function (e) {
+    btn.disabled = false;
+    alert('Could not save on this device: ' + e.message);
+  });
+}
+
+function backToClasses() { draft = null; renderClasses(); }
+
+/* ---------- pending log -------------------------------------------------- */
+function openLog() {
+  allPending().then(function (p) {
+    p = p || [];
+    $('logList').innerHTML = p.length ? p.map(function (r) {
+      return '<div class="stu"><div class="nm"><b>' + esc(r.className) + '</b><span>'
+        + esc(r.date) + ' · ' + r.records.length + ' students'
+        + (r.attempts ? ' · ' + r.attempts + ' attempt(s)' : '') + '</span></div></div>'
+        + (r.lastError ? '<p class="muted err">' + esc(r.lastError) + '</p>' : '');
+    }).join('') : '<p class="muted">Nothing pending. Everything is synced.</p>';
+    show('logView');
+  });
+}
+
+/* ---------- sync --------------------------------------------------------- */
+function syncNow() { trySync(true); }
+
+function trySync(loud) {
+  if (syncing || !cfg) return;
+  if (!navigator.onLine) { if (loud) alert('Still offline. Nothing was lost — it will upload later.'); return; }
+  syncing = true;
+  allPending().then(function (p) {
+    p = p || [];
+    if (!p.length) { if (loud) alert('Nothing pending.'); return null; }
+    // One request per session. Never one per student.
+    return p.reduce(function (chain, rec) {
+      return chain.then(function () {
+        return call('sync', { sessions: [{
+          sessionId: rec.sessionId, className: rec.className, date: rec.date,
+          capturedAt: new Date(rec.capturedAt).toISOString(), records: rec.records
+        }] }).then(function (res) {
+          var r = (res.results || [])[0] || {};
+          // A duplicate is success: the rows are already in the sheet. Only a
+          // confirmed landing removes the local copy.
+          if (r.written > 0 || r.duplicate || r.empty) return delPending(rec.sessionId);
+          rec.attempts++; rec.lastError = 'Server accepted nothing back.';
+          return putPending(rec);
+        }).catch(function (e) {
+          rec.attempts++; rec.lastError = e.message;
+          return putPending(rec);
+        });
+      });
+    }, Promise.resolve());
+  }).then(function () {
+    syncing = false;
+    return setStatus();
+  }).then(function (n) {
+    renderSyncNote();
+    if (loud) alert(n ? n + ' session(s) still pending. Check the list for the reason.'
+                      : '✅ Everything synced.');
+  }).catch(function (e) {
+    syncing = false;
+    if (loud) alert(e.message);
+  });
+}
+
+/* ---------- boot ---------------------------------------------------------
+   Deliberately cheap: read one small localStorage key, decide which screen to
+   show, and only then touch IndexedDB. Nothing here waits on the network. */
+(function boot() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(function () {});
+  }
+  // Ask the browser not to evict the pending queue under storage pressure.
+  if (navigator.storage && navigator.storage.persist) {
+    navigator.storage.persist().catch(function () {});
+  }
+
+  loadCfg();
+  if (!cfg) { show('setupView'); return; }
+
+  getMeta('roster').then(function (r) {
+    roster = r;
+    renderClasses();
+    if (navigator.onLine) {
+      // Refresh the class lists in the background, after the screen is drawn.
+      var idle = window.requestIdleCallback || function (f) { setTimeout(f, 300); };
+      idle(function () { refreshRoster(true); trySync(); });
+    }
+  }).catch(function () { show('classView'); });
+
+  // Event-driven only. No interval, ever.
+  window.addEventListener('online', function () { setStatus(); trySync(); });
+  window.addEventListener('offline', setStatus);
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') { setStatus(); trySync(); }
+  });
+})();
+</script>
+</body>
+</html>
