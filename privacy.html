@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<!--
+  QRoll — Privacy Policy.
+
+  Static page, same GitHub Pages site as index.html (the launcher). Exists to
+  satisfy Google Cloud Console's OAuth consent screen requirement for a
+  Privacy Policy URL when moving qroll-central from Testing to In production.
+
+  Kept factually narrow on purpose: it describes what the real code actually
+  does (grep the repo before changing a claim here), not a generic template.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QRoll — Privacy Policy</title>
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="qroll-icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="qroll-icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="qroll-icon-512.png">
+
+  <meta name="theme-color" content="#1f6f43">
+  <meta name="description" content="QRoll privacy policy — what data QRoll handles, where it lives, and who controls it.">
+
+  <style>
+    :root{
+      --green:#1f6f43; --green-d:#12492c;
+      --ink:#1a202c; --line:#e2e8f0; --muted:#6b7280; --cream:#f7faf8;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0}
+    body{
+      background:var(--cream); color:var(--ink);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+      line-height:1.6;
+    }
+    .wrap{max-width:720px;margin:0 auto;padding:36px 20px 64px}
+    .brand{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+    .brand img{width:40px;height:40px;border-radius:10px}
+    .brand b{font-size:20px;color:var(--green-d)}
+    .updated{color:var(--muted);font-size:13px;margin:0 0 28px}
+    h1{font-size:26px;margin:18px 0 6px;color:var(--green-d)}
+    h2{font-size:17px;margin:28px 0 8px;color:var(--ink)}
+    p{margin:0 0 14px;font-size:15px}
+    ul{margin:0 0 14px;padding-left:22px}
+    li{margin-bottom:6px;font-size:15px}
+    a{color:var(--green);font-weight:600}
+    .back{display:inline-block;margin-top:36px;font-size:13.5px;color:var(--muted);text-decoration:none}
+    .back:hover{color:var(--green)}
+    strong{color:var(--ink)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">
+      <img src="qroll-icon-192.png" alt="QRoll">
+      <b>QRoll</b>
+    </div>
+    <p class="updated">Last updated: 27 August 2026</p>
+
+    <h1>Privacy Policy</h1>
+
+    <p>QRoll is an attendance and academic-record tool for teachers, built on
+    Google Sheets and Google Apps Script. This page explains what data QRoll
+    handles, where it lives, and who controls it.</p>
+
+    <h2>Who runs QRoll</h2>
+    <p>QRoll is maintained by an individual developer, not a company. Contact:
+    <a href="mailto:princethakur@gmail.com">princethakur@gmail.com</a>.</p>
+
+    <h2>What data QRoll handles</h2>
+    <p>When you (a teacher) open QRoll, you sign in with your own Google
+    Account. QRoll then works entirely inside <strong>your own Google Drive</strong>
+    — it creates one Google Sheet as your private workspace (or, if you
+    already have one, attaches to it) and stores everything there:</p>
+    <ul>
+      <li>Your teacher profile — name, designation, department, college name.</li>
+      <li>Your student roster — names, roll numbers, and university roll
+        numbers, entered by you or imported from a file you upload.</li>
+      <li>Attendance records, marked either by you or by a student scanning a
+        QR code you display in class.</li>
+      <li>Assignment, mid-term, practical and CCA marks you enter.</li>
+      <li>A 6-digit console PIN you choose, used only to lock the console
+        screen on a shared device — this is separate from your Google
+        password and is never sent anywhere outside your own workspace.</li>
+    </ul>
+    <p>None of this data is copied to any server, database, or account other
+    than your own Google Account. There is no separate QRoll backend — the
+    "console" you use is Google Apps Script code running under your own
+    Google identity, reading and writing your own Google Sheet.</p>
+
+    <h2>Students' data</h2>
+    <p>Student names, roll numbers and attendance are entered and controlled
+    by the teacher, as part of ordinary institutional record-keeping, and
+    live in that teacher's own Google Sheet. QRoll does not separately
+    collect, see, or store this data anywhere else. A student who scans the
+    QR code to mark their own attendance submits only what is needed for that
+    (their identifying roll number and the class session) directly into the
+    teacher's workspace.</p>
+
+    <h2>Google permissions QRoll requests, and why</h2>
+    <ul>
+      <li><strong>Google Sheets</strong> — to create and update your workspace
+        spreadsheet (roster, attendance, marks, reports).</li>
+      <li><strong>Google Drive</strong> — to create your workspace file, and
+        for one specific feature: attaching a supporting document to a CCA
+        grace-marks entry, stored privately in your own Drive.</li>
+      <li><strong>Gmail send</strong> — only to email you a one-time PIN
+        reset code, to your own signed-in address, when you use "Forgot
+        PIN?". QRoll never reads your mail and never emails anyone else.</li>
+      <li><strong>External requests</strong> — used only to call Google's own
+        Sheets export endpoint, to generate the PDF versions of registers,
+        reports and award lists you explicitly ask for.</li>
+    </ul>
+
+    <h2>What QRoll does not do</h2>
+    <ul>
+      <li>No advertising, no ad tracking, no analytics, no third-party
+        scripts or cookies of any kind.</li>
+      <li>No data is sold, shared, or shown to anyone other than the signed-in
+        teacher who owns that workspace.</li>
+      <li>No workspace can read another teacher's data — each Google Sheet is
+        private to the account that created or was given it.</li>
+    </ul>
+
+    <h2>How long data is kept, and deleting it</h2>
+    <p>Your data is kept for as long as your workspace Google Sheet exists.
+    Since it is an ordinary file in your own Google Drive, you control it
+    directly: you can open it, export it, or delete it at any time the same
+    way you would any other Google Sheet. Deleting the Sheet deletes the
+    data. Revoking QRoll's access from your
+    <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">Google Account permissions page</a>
+    stops QRoll from accessing your workspace going forward.</p>
+
+    <h2>Changes to this policy</h2>
+    <p>If this policy changes, the "Last updated" date above will change with
+    it. Material changes will be reflected here before they take effect.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about this policy or your data:
+    <a href="mailto:princethakur@gmail.com">princethakur@gmail.com</a>.</p>
+
+    <a class="back" href="./index.html">&larr; Back to QRoll</a>
+  </div>
+</body>
+</html>
