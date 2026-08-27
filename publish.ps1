@@ -9,6 +9,11 @@
   It stages everything changed here, commits, and pushes -- the only step
   that actually reaches GitHub Pages is the push at the end.
 
+  Run this from your own normal terminal (double-click it, or open
+  PowerShell yourself and run .\publish.ps1). It's not meant to be run from
+  an automated/non-interactive context -- git's credential lookup here
+  needs a real interactive session to authenticate.
+
 .PARAMETER Message
   Commit message describing what changed. If you don't pass one, you'll be
   prompted for it.
@@ -24,7 +29,6 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
 
-# Nothing changed? Nothing to do.
 git add -A
 $staged = git diff --cached --name-only
 if (-not $staged) {
@@ -39,13 +43,24 @@ if (-not $Message) {
   $Message = Read-Host "Commit message (what changed and why)"
   if (-not $Message) {
     Write-Host "No message entered -- aborting. Nothing was committed or pushed." -ForegroundColor Red
-    git reset > $null
+    git reset | Out-Null
     exit 1
   }
 }
 
 git commit -m $Message
-git push
+if ($LASTEXITCODE -ne 0) {
+  Write-Host "Commit failed -- nothing was pushed." -ForegroundColor Red
+  exit 1
+}
+
+git push origin main
+if ($LASTEXITCODE -ne 0) {
+  Write-Host ""
+  Write-Host "PUSH FAILED (see error above). The commit above is saved locally," -ForegroundColor Red
+  Write-Host "but NOT live yet -- run 'git push' again once whatever's wrong is fixed." -ForegroundColor Red
+  exit 1
+}
 
 Write-Host ""
 Write-Host "Pushed. GitHub Pages usually takes 1-2 minutes to rebuild --" -ForegroundColor Green
