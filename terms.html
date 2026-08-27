@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<!--
+  QRoll — Terms of Service.
+
+  Static page, same GitHub Pages site as index.html/privacy.html. Fills the
+  optional "Application Terms of Service link" field on the OAuth consent
+  screen (not one of the four required fields, but the same form asks for it).
+
+  Kept short and honest: single-developer free tool, no SLA, no warranty,
+  data belongs to the teacher's own Google account. Not a substitute for
+  real legal advice if QRoll ever grows beyond this scale.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QRoll — Terms of Service</title>
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="qroll-icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="qroll-icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="qroll-icon-512.png">
+
+  <meta name="theme-color" content="#1f6f43">
+  <meta name="description" content="QRoll terms of service — the terms for using the QRoll attendance console.">
+
+  <style>
+    :root{
+      --green:#1f6f43; --green-d:#12492c;
+      --ink:#1a202c; --line:#e2e8f0; --muted:#6b7280; --cream:#f7faf8;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0}
+    body{
+      background:var(--cream); color:var(--ink);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+      line-height:1.6;
+    }
+    .wrap{max-width:720px;margin:0 auto;padding:36px 20px 64px}
+    .brand{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+    .brand img{width:40px;height:40px;border-radius:10px}
+    .brand b{font-size:20px;color:var(--green-d)}
+    .updated{color:var(--muted);font-size:13px;margin:0 0 28px}
+    h1{font-size:26px;margin:18px 0 6px;color:var(--green-d)}
+    h2{font-size:17px;margin:28px 0 8px;color:var(--ink)}
+    p{margin:0 0 14px;font-size:15px}
+    ul{margin:0 0 14px;padding-left:22px}
+    li{margin-bottom:6px;font-size:15px}
+    a{color:var(--green);font-weight:600}
+    .back{display:inline-block;margin-top:36px;font-size:13.5px;color:var(--muted);text-decoration:none}
+    .back:hover{color:var(--green)}
+    strong{color:var(--ink)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">
+      <img src="qroll-icon-192.png" alt="QRoll">
+      <b>QRoll</b>
+    </div>
+    <p class="updated">Last updated: 27 August 2026</p>
+
+    <h1>Terms of Service</h1>
+
+    <p>QRoll is a free attendance and academic-record tool for teachers,
+    built on Google Sheets and Google Apps Script and maintained by an
+    individual developer, not a company. By signing in and using QRoll, you
+    agree to these terms.</p>
+
+    <h2>What QRoll is</h2>
+    <p>QRoll runs entirely inside your own Google Account: it creates (or
+    attaches to) a Google Sheet that serves as your private workspace, and
+    every feature — attendance, registers, reports, marks — reads and writes
+    only that Sheet. See the
+    <a href="./privacy.html">Privacy Policy</a> for exactly what data that
+    involves.</p>
+
+    <h2>Your responsibilities</h2>
+    <ul>
+      <li>You are responsible for the accuracy of the data you enter —
+        rosters, attendance, marks — and for how it is used within your
+        institution.</li>
+      <li>Your 6-digit console PIN is yours to protect. QRoll cannot recover
+        it without you confirming your own signed-in Google identity (see
+        "Forgot PIN?" in the console).</li>
+      <li>Use QRoll only for genuine academic record-keeping you are
+        authorized to perform.</li>
+    </ul>
+
+    <h2>No warranty, no service guarantee</h2>
+    <p>QRoll is provided <strong>"as is"</strong>, free of charge, with no
+    guarantee of uptime, accuracy, or fitness for any particular purpose. It
+    is maintained on a best-effort basis by one developer, not backed by a
+    company or a support contract. Keep your own copies of anything
+    critical — QRoll does not replace your institution's official records.</p>
+
+    <h2>Limitation of liability</h2>
+    <p>To the fullest extent permitted by law, the developer of QRoll is not
+    liable for any loss, damage, or academic/administrative consequence
+    arising from the use of, or inability to use, QRoll — including data
+    loss, incorrect records, or service interruption.</p>
+
+    <h2>Changes and availability</h2>
+    <p>QRoll may change, add, or remove features at any time, since it is
+    centrally maintained and updates reach every workspace automatically.
+    The service may also be discontinued at any time. Your own Google Sheet
+    remains yours regardless — it lives in your Google Drive, not on any
+    QRoll-controlled server, so nothing is lost if QRoll itself ever stops.</p>
+
+    <h2>Changes to these terms</h2>
+    <p>If these terms change, the "Last updated" date above will change with
+    them.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about these terms:
+    <a href="mailto:princethakur@gmail.com">princethakur@gmail.com</a>.</p>
+
+    <p style="margin-top:8px"><a href="./privacy.html">Privacy Policy</a></p>
+
+    <a class="back" href="./index.html">&larr; Back to QRoll</a>
+  </div>
+</body>
+</html>
