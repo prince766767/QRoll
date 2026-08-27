@@ -438,12 +438,17 @@
 </div>
 
 <script>
-  /* ====================== OPTIONAL DEFAULT ======================
-     If you want the bare link (with no ?u= parameter) to open YOUR
-     console, paste your /exec URL here. Leave it empty and a first-time
-     visitor is asked to paste their own instead.
+  /* ====================== THE SHARED CENTRAL CONSOLE ======================
+     Post-centralization, every teacher shares this SAME /exec URL — Google
+     Sign-In plus each account's own workspace is what tells them apart
+     server-side (see Workspace.gs). There is no per-teacher URL to paste
+     anymore: this is simply the one central teacher-console deployment.
+     The ?u= override and the "paste your own link" first-run screen below
+     still exist for anyone opening a copy of this launcher pointed at a
+     different script, but the normal case for this project is: everyone
+     gets this same value.
      ============================================================== */
-  var DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbxYC-UiFf0jCCmG_WEuWEZ4J5mFYsVnDRz8FeAUKGwJS4-uqqyUWLWwTztVXFE6zPs8hg/exec';
+  var DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbyr06oFfvY4tmVs1gEL0b5An9utqCuewe8Q4XDUe5gVFZRwuDcIvTM0LHHpQBbUu6Vn/exec';
   /* ============================================================== */
 
   var WAIT_MS   = 5000;                    // splash holds for three seconds
@@ -495,15 +500,16 @@
   /* =====================================================================
      GREETING
 
-     One greeting per launch, picked at random from English, Hindi and French
-     and matched to the time of day. One language at a time — three stacked on
-     top of each other would be a novelty, not a welcome.
+     One greeting per launch, picked at random from English, Hindi, French,
+     German, Russian, Sanskrit and Punjabi, and matched to the time of day.
+     One language at a time — seven stacked on top of each other would be a
+     novelty, not a welcome.
      ===================================================================== */
   var GREETINGS = {
-    morning:   ['Good Morning',   'सुप्रभात',    'Bonjour'],
-    afternoon: ['Good Afternoon', 'नमस्कार',     'Bon après-midi'],
-    evening:   ['Good Evening',   'शुभ संध्या',   'Bonsoir'],
-    night:     ['Good Night',     'शुभ रात्रि',   'Bonne nuit']
+    morning:   ['Good Morning',   'सुप्रभात',    'Bonjour',        'Guten Morgen', 'Доброе утро',  'सुप्रभातम्',    'ਜੀ ਆਇਆ ਨੂੰ'],
+    afternoon: ['Good Afternoon', 'नमस्कार',     'Bon après-midi', 'Guten Tag',    'Добрый день',  'शुभ मध्याह्नम्', 'ਜੀ ਆਇਆ ਨੂੰ'],
+    evening:   ['Good Evening',   'शुभ संध्या',   'Bonsoir',        'Guten Abend',  'Добрый вечер', 'शुभ सायाह्नम्',  'ਜੀ ਆਇਆ ਨੂੰ'],
+    night:     ['Good Night',     'शुभ रात्रि',   'Bonne nuit',     'Gute Nacht',   'Доброй ночи',  'शुभरात्रिः',    'ਜੀ ਆਇਆ ਨੂੰ']
   };
 
   function partOfDay(){
