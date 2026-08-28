@@ -161,6 +161,13 @@
     .system{font-size:clamp(12px,3.3vw,14px);font-weight:600;color:#e8f4ec;
       line-height:1.45;max-width:26ch}
 
+    /* A quiet way in to the printable guide -- new teachers need it most, but
+       it stays available every time the splash shows, not just first-run. */
+    .guidelink{display:inline-flex;align-items:center;gap:6px;text-decoration:none;
+      background:rgba(255,255,255,.12);color:#dcefe3;font-size:12.5px;font-weight:700;
+      padding:8px 16px;border-radius:999px}
+    .guidelink:hover{background:rgba(255,255,255,.22)}
+
     /* ---- Credits ---- */
     .band.bot{gap:calc(var(--gap) * .55)}
     .initiative{font-size:clamp(10.5px,2.8vw,11.5px);line-height:1.55;color:#9fcdb4}
@@ -328,6 +335,9 @@
 
     <div class="system up d8">A Teacher Centric Academic Management System</div>
 
+    <a class="guidelink up d8" href="./QRoll-Quick-Start-Guide.pdf" target="_blank"
+       rel="noopener" onclick="event.stopPropagation()">&#128196; Quick Start Guide</a>
+
     <!-- Shown INSTEAD of the hand-off when there is no connection. The console
          lives on script.google.com and cannot be cached by anyone, so with no
          signal there is nothing to hand over to — offering Quick Attendance is
@@ -375,8 +385,8 @@
       <h2>Welcome to QRoll</h2>
       <p>Tell QRoll your name once. It is stored on this phone only — it never
          leaves the device and is never sent anywhere.</p>
-      <label for="nameInput">Teacher Name</label>
-      <input type="text" id="nameInput" autocomplete="name" placeholder="Dr. Prince Thakur">
+      <label for="nameInput">Please enter your name with salutation</label>
+      <input type="text" id="nameInput" autocomplete="name">
       <div class="err" id="nameErr"></div>
       <button class="btn" onclick="saveName()">Save &amp; Continue</button>
     </div>
@@ -389,9 +399,31 @@
       <button class="btn" onclick="location.reload()">Reload</button>
     </div>
 
+    <!-- Shown once, right after a first-time teacher saves their name --
+         before they ever reach the console -- so the rest of setup (Google
+         sign-in, workspace, PIN) happens inside the installed app from the
+         start, not in a browser tab they install only after finishing. -->
+    <div id="installPrompt" class="hidden">
+      <h2>Install QRoll</h2>
+      <p>Add QRoll to your home screen now, then finish setup inside the
+         installed app.</p>
+      <button class="btn install" id="installBtn2" onclick="installApp('2')">
+        <span>&#128241;</span> Install QRoll on this phone</button>
+      <div class="a2hs hidden" id="a2hs2">
+        <b>Add QRoll to your home screen</b><br>
+        <span id="a2hsText2">Open your browser menu and choose
+          <b>Add to Home screen</b>.</span>
+      </div>
+      <div class="a2hs okmsg hidden" id="installedNote2">
+        <b>&#10003; QRoll is installed</b><br>
+        Open it from your home screen to continue.
+      </div>
+      <button class="btn alt" onclick="continueAfterInstallPrompt()">Continue &rarr;</button>
+    </div>
+
     <div id="askBoth" class="hidden">
       <h2>Settings</h2>
-      <label for="nameInput2">Teacher Name</label>
+      <label for="nameInput2">Name (with salutation)</label>
       <input type="text" id="nameInput2" autocomplete="name">
       <div class="err" id="bothErr"></div>
       <button class="btn" onclick="saveBoth()">Save</button>
@@ -643,7 +675,7 @@
   function showSheet(which){
     cancelCountdown();
     document.getElementById('sheet').classList.remove('hidden');
-    ['askName','linkError','askBoth'].forEach(function(id){
+    ['askName','linkError','askBoth','installPrompt'].forEach(function(id){
       document.getElementById(id).classList.toggle('hidden', id !== which);
     });
     var first = document.querySelector('#' + which + ' input');
@@ -658,6 +690,16 @@
     if (!v)            { err.textContent = 'Please enter your name.'; return; }
     if (v.length > 60) { err.textContent = 'That name looks too long.'; return; }
     write(NAME_KEY, v);
+    // First-time only (this whole screen only ever shows when no name was
+    // stored yet). Skip the prompt if already running installed -- nothing
+    // to install. Otherwise show it now, before boot() ever reaches the
+    // console, so the rest of setup happens inside the installed app.
+    if (isStandalone()) { hideSheet(); boot(); return; }
+    refreshInstallUi(false, '2');
+    showSheet('installPrompt');
+  }
+
+  function continueAfterInstallPrompt(){
     hideSheet(); boot();
   }
 
@@ -739,20 +781,28 @@
   }
 
   window.addEventListener('beforeinstallprompt', function(e){
-    e.preventDefault();          // keep it for our own button
+    e.preventDefault();          // keep it for our own buttons
     installEvent = e;
-    refreshInstallUi();
+    refreshInstallUi(false, '');
+    refreshInstallUi(false, '2');
   });
 
   window.addEventListener('appinstalled', function(){
     installEvent = null;
-    refreshInstallUi(true);
+    refreshInstallUi(true, '');
+    refreshInstallUi(true, '2');
   });
 
-  function refreshInstallUi(justInstalled){
-    var btn  = document.getElementById('installBtn');
-    var hint = document.getElementById('a2hs');
-    var done = document.getElementById('installedNote');
+  // idSuffix distinguishes the two places this UI appears: '' is the
+  // Settings-panel button (unchanged ids), '2' is the first-run install
+  // prompt shown right after saveName(). Both share the one native
+  // beforeinstallprompt event captured above -- only ever fires once per
+  // page load regardless of how many buttons want to use it.
+  function refreshInstallUi(justInstalled, idSuffix){
+    idSuffix = idSuffix || '';
+    var btn  = document.getElementById('installBtn'+idSuffix);
+    var hint = document.getElementById('a2hs'+idSuffix);
+    var done = document.getElementById('installedNote'+idSuffix);
     if (!btn) return;
     if (justInstalled || isStandalone()) {
       btn.classList.add('hidden');
@@ -764,26 +814,28 @@
     btn.classList.remove('hidden');
   }
 
-  function installApp(){
+  function installApp(idSuffix){
+    idSuffix = idSuffix || '';
     if (installEvent) {
       installEvent.prompt();
       var choice = installEvent.userChoice;
       installEvent = null;                     // a prompt can only be used once
       if (choice && choice.then) {
         choice.then(function(res){
-          if (res && res.outcome === 'accepted') refreshInstallUi(true);
-          else showManualHint();               // declined — offer the manual route
+          if (res && res.outcome === 'accepted') refreshInstallUi(true, idSuffix);
+          else showManualHint(idSuffix);       // declined — offer the manual route
         });
       }
       return;
     }
-    showManualHint();
+    showManualHint(idSuffix);
   }
 
   // No native prompt available (iOS, or Chrome has not offered one yet):
   // spell out the taps for this particular browser.
-  function showManualHint(){
-    var el = document.getElementById('a2hsText');
+  function showManualHint(idSuffix){
+    idSuffix = idSuffix || '';
+    var el = document.getElementById('a2hsText'+idSuffix);
     var ua = navigator.userAgent;
     if (/iPhone|iPad|iPod/.test(ua)) {
       el.innerHTML = 'In <b>Safari</b>, tap <b>Share</b> (the box with an arrow), ' +
@@ -797,10 +849,11 @@
                      'your browser menu and choose <b>Install</b> / ' +
                      '<b>Add to Home screen</b>.';
     }
-    document.getElementById('a2hs').classList.remove('hidden');
+    document.getElementById('a2hs'+idSuffix).classList.remove('hidden');
   }
 
-  refreshInstallUi();
+  refreshInstallUi(false, '');
+  refreshInstallUi(false, '2');
 
   // A service worker makes Chrome treat this as an installable app rather than
   // a bookmark, which is what gets you the real icon instead of a screenshot.
