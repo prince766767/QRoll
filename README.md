@@ -1,11 +1,11 @@
 # QRoll launcher — home-screen icon fix
 
-**One person publishes this once. Everyone else just taps a link.**
+**One link. Every teacher. No setup on your end per person.**
 
 Your colleagues never see GitHub, never install anything, never edit a file.
-They open a normal-looking web link, tap *Add to Home screen*, and QRoll appears
-with the proper logo pointing at their own Sheet. That's the whole experience on
-their side.
+They open one normal-looking web link, tap *Add to Home screen*, and QRoll
+appears with the proper logo, straight into the shared console. That's the
+whole experience on their side.
 
 ---
 
@@ -31,20 +31,14 @@ Google's, carrying a real manifest. That's this folder.
 
 ---
 
-## How one page serves the whole department
+## One link for the whole department
 
-Every teacher copies the Sheet, so every teacher has a **different** `/exec`
-URL. Rather than one launcher each, this page learns the teacher's URL from the
-link they're sent:
-
-```
-https://prince766767.github.io/QRoll/?u=https://script.google.com/macros/s/…/exec
-```
-
-It saves that on their phone, strips the parameter from the address bar, and
-from then on the installed icon opens their own console. A teacher who opens the
-bare link with no parameter is shown a single "paste your QRoll link" box
-instead — so either route works.
+QRoll is now a centrally maintained app: there is exactly **one** teacher
+console, at one `/exec` URL. Google Sign-In plus each teacher's own workspace
+is what tells them apart — not which link they opened. So this launcher hard-
+codes that single URL (`DEFAULT_URL` in `index.html`) and hands every visitor
+straight to it. There is nothing to personalize per teacher and nothing for
+you to generate or send them individually — the same link works for everyone.
 
 ---
 
@@ -52,8 +46,7 @@ instead — so either route works.
 
 | File | Purpose |
 |------|---------|
-| `index.html` | The launcher teachers open. Optionally set `DEFAULT_URL` to your own app. |
-| `make-link.html` | **Yours only.** Paste a colleague's `/exec` URL, get the link + a ready-written message to send them. |
+| `index.html` | The launcher every teacher opens. `DEFAULT_URL` points at the shared teacher console. |
 | `manifest.json` | App name, colours, icons |
 | `sw.js` | Tiny service worker so Chrome treats this as an installable app, not a bookmark |
 | `qroll-icon-192.png`, `qroll-icon-512.png` | Standard icons |
@@ -74,8 +67,8 @@ second.
 2. On the empty-repo screen, find the line *"…or upload an existing file"* and
    click **uploading an existing file**.
    (If the repo already has files, use **Add file → Upload files** instead.)
-3. Open the `qroll-launcher` folder on your computer, select **all nine
-   files** (the README comes along harmlessly — GitHub just shows it on the
+3. Open the `qroll-launcher` folder on your computer, select the files listed
+   above (the README comes along harmlessly — GitHub just shows it on the
    repo page), and drag them into the browser window.
 
    Drag the **files**, not the folder. If you drop the folder itself, everything
@@ -107,10 +100,9 @@ https://prince766767.github.io/QRoll/
 Note the **capital Q and R** — the path copies your repo name exactly, and it is
 case-sensitive. `…/qroll/` will 404.
 
-That's it. You never touch GitHub again unless you want to change the design.
-
-> `DEFAULT_URL` in `index.html` is already set to your own `/exec` URL, so the
-> bare link opens your console. Colleagues get the `?u=` version below.
+That's it. You never touch GitHub again unless you want to change the design
+or push a new `DEFAULT_URL` (only needed if a brand-new deployment ever issues
+a new `/exec` URL — see "Keeping it in sync" below).
 
 ### Optional — keep the Apps Script source here too
 
@@ -124,19 +116,16 @@ Script Properties, generated at runtime. Neither is in the source.
 
 ---
 
-## Part 2 — give a colleague their link (30 seconds each)
+## Part 2 — give this to your colleagues (30 seconds, once, for everyone)
 
-1. Open `https://prince766767.github.io/QRoll/make-link.html`.
-2. Paste their `/exec` URL (they get it from their own Sheet:
-   **⚙ Attendance Setup → Show my app link**).
-3. **Make the link** → **Copy full message** → paste into WhatsApp or email.
+Just send the one link:
 
-The message already contains the link and the Android/iPhone instructions, so
-there's nothing for you to explain.
+```
+https://prince766767.github.io/QRoll/
+```
 
-**Don't want to be in the loop?** Send them the bare
-`https://prince766767.github.io/QRoll/` and tell them to tap *Use a different
-QRoll link*. They paste their own app link once and it's remembered.
+That's the entire distribution step. Every teacher gets the same message,
+there's nothing to look up or paste per person.
 
 ---
 
@@ -145,10 +134,12 @@ QRoll link*. They paste their own app link once and it's remembered.
 1. Open the link on their phone.
 2. **Android (Chrome):** ⋮ menu → **Add to Home screen** / **Install app**.
    **iPhone (must be Safari, not Chrome):** **Share** → **Add to Home Screen**.
-3. Done. The QRoll icon opens their console.
+3. Done. The QRoll icon opens the console, where they sign in with their own
+   Google account.
 
-If they'd previously added the old `/exec` shortcut, they should **delete it
-first** — phones cache shortcut icons and won't refresh one in place.
+If they'd previously added the old per-Sheet `/exec` shortcut from before
+centralization, they should **delete it first** — phones cache shortcut icons
+and won't refresh one in place.
 
 ---
 
@@ -164,10 +155,6 @@ lists any missing field. Usual cause is a 404 on `manifest.json` because files
 went into a subfolder — all paths are relative, so everything must sit side by
 side.
 
-**A colleague's link opens the wrong console**
-They probably opened someone else's `?u=` link earlier. Tap **Use a different
-QRoll link** and paste the right one.
-
 **Icons load but look cropped on Android**
 Android crops to a circle; that's what the `maskable` files are for. If you
 regenerate the logo, keep artwork inside the middle 80% of the canvas.
@@ -180,7 +167,9 @@ a Chrome tab. Attendance works identically; only the launcher runs standalone.
 
 ## Keeping it in sync
 
-Redeploying a new Apps Script *version* changes nothing here. Creating a brand
-**new deployment** issues a new `/exec` URL — in that case the teacher taps
-**Use a different QRoll link** and pastes the new one, or you send a fresh
-generated link. No re-upload needed either way.
+Redeploying a new Apps Script *version* (`clasp deploy -i <existing-id>`)
+changes nothing here — the `/exec` URL stays the same, so this launcher keeps
+working with no edits. Only creating a brand **new** deployment issues a new
+`/exec` URL; in that case, update `DEFAULT_URL` in `index.html` here, re-upload
+it to the repo, and every teacher's existing home-screen icon picks it up
+automatically next time they open it — no new link to send out.

@@ -11,23 +11,21 @@
   the generic Google "G".
 
   This page is a real top-level document, so the home-screen shortcut gets the
-  QRoll logo. It shows for three seconds and then hands straight over to the
-  teacher console's PIN screen.
+  QRoll logo. It shows for a few seconds and then hands straight over to the
+  teacher console.
 
-  ONE page serves the whole department
-  ------------------------------------
-  Every teacher has their own copy of the Sheet and therefore their own /exec
-  URL, so this page does not hardcode one. It learns the teacher's URL from
-  ?u=<their exec url> and remembers it in localStorage on that phone. A teacher
-  who arrives without the parameter is asked to paste their link once.
+  ONE link serves every teacher (post-centralization)
+  ----------------------------------------------------
+  QRoll now runs as one centrally maintained app. Every teacher shares the
+  SAME /exec URL (DEFAULT_URL below) — Google Sign-In plus each account's own
+  workspace is what tells them apart server-side. There is no per-teacher link
+  to generate or send anymore: this exact page, at one address, is the whole
+  distribution story.
 
-  There is deliberately NO second screen. The splash carries the greeting, the
-  quote, the credits and everything else; the only time an input appears is the
-  first launch on a phone, when QRoll genuinely does not yet know the teacher's
-  name or their app link.
-
-  DEFAULT_URL below is optional — set it to your own /exec URL if you want the
-  bare link to open your console.
+  There is deliberately NO second screen in normal use. The splash carries the
+  greeting, the quote, the credits and everything else; the only time an input
+  appears is the very first launch on a phone, when QRoll asks for the
+  teacher's name once (for the greeting only — never sent anywhere).
 -->
 <html lang="en">
 <head>
@@ -383,27 +381,18 @@
       <button class="btn" onclick="saveName()">Save &amp; Continue</button>
     </div>
 
-    <div id="askUrl" class="hidden">
-      <h2>One-time setup</h2>
-      <p>Paste your own QRoll app link. You only do this once on this phone.</p>
-      <ol>
-        <li>Open your attendance <b>Google Sheet</b> on a computer.</li>
-        <li>Menu: <b>&#9881; Attendance Setup &rarr; Show my app link</b>.</li>
-        <li>Copy the <b>Teacher console</b> link and paste it below.</li>
-      </ol>
-      <label for="urlInput">QRoll app link</label>
-      <input type="url" id="urlInput" inputmode="url" autocomplete="off"
-             placeholder="https://script.google.com/macros/s/…/exec">
-      <div class="err" id="urlErr"></div>
-      <button class="btn" onclick="saveUrl()">Save &amp; Continue</button>
+    <div id="linkError" class="hidden">
+      <h2>Something's not right</h2>
+      <p>QRoll couldn't find its app link on this device. This shouldn't
+         normally happen — try reloading the page. If it keeps happening,
+         contact Dr. Prince Thakur.</p>
+      <button class="btn" onclick="location.reload()">Reload</button>
     </div>
 
     <div id="askBoth" class="hidden">
       <h2>Settings</h2>
       <label for="nameInput2">Teacher Name</label>
       <input type="text" id="nameInput2" autocomplete="name">
-      <label for="urlInput2">QRoll app link</label>
-      <input type="url" id="urlInput2" inputmode="url" autocomplete="off">
       <div class="err" id="bothErr"></div>
       <button class="btn" onclick="saveBoth()">Save</button>
       <button class="btn alt" onclick="closeSettings()">Cancel</button>
@@ -439,14 +428,10 @@
 
 <script>
   /* ====================== THE SHARED CENTRAL CONSOLE ======================
-     Post-centralization, every teacher shares this SAME /exec URL — Google
-     Sign-In plus each account's own workspace is what tells them apart
-     server-side (see Workspace.gs). There is no per-teacher URL to paste
-     anymore: this is simply the one central teacher-console deployment.
-     The ?u= override and the "paste your own link" first-run screen below
-     still exist for anyone opening a copy of this launcher pointed at a
-     different script, but the normal case for this project is: everyone
-     gets this same value.
+     Every teacher shares this SAME /exec URL — Google Sign-In plus each
+     account's own workspace is what tells them apart server-side (see
+     Workspace.gs). This is the one and only central teacher-console
+     deployment; there is nothing per-teacher to configure.
      ============================================================== */
   var DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbyr06oFfvY4tmVs1gEL0b5An9utqCuewe8Q4XDUe5gVFZRwuDcIvTM0LHHpQBbUu6Vn/exec';
   /* ============================================================== */
@@ -467,12 +452,9 @@
 
   var PREVIEW = false;
 
-  // Which QRoll app should this phone open, in priority order:
-  // ?u= in the link  >  what this phone saved earlier  >  the built-in default.
-  //
-  // &preview=1 uses the link for THIS page load only, without claiming the
-  // browser — so whoever generates links for colleagues can check one without
-  // their own launcher switching to someone else's console.
+  // Which QRoll app should this phone open. Always DEFAULT_URL in normal use;
+  // the ?u= override below is a developer/testing escape hatch only (e.g. to
+  // point a browser at a staging deployment) and plays no role for teachers.
   function resolveUrl(){
     var param = '', preview = false;
     try {
@@ -661,7 +643,7 @@
   function showSheet(which){
     cancelCountdown();
     document.getElementById('sheet').classList.remove('hidden');
-    ['askName','askUrl','askBoth'].forEach(function(id){
+    ['askName','linkError','askBoth'].forEach(function(id){
       document.getElementById(id).classList.toggle('hidden', id !== which);
     });
     var first = document.querySelector('#' + which + ' input');
@@ -679,34 +661,17 @@
     hideSheet(); boot();
   }
 
-  function saveUrl(){
-    var v = document.getElementById('urlInput').value.trim();
-    var err = document.getElementById('urlErr');
-    if (!isExec(v)) {
-      err.textContent = v
-        ? 'That doesn’t look like a QRoll app link. It should start with ' +
-          'https://script.google.com/macros/s/ and end with /exec'
-        : 'Paste your QRoll app link first.';
-      return;
-    }
-    write(URL_KEY, v); QROLL_URL = v;
-    hideSheet(); boot();
-  }
-
   function openSettings(){
     document.getElementById('nameInput2').value = storedName();
-    document.getElementById('urlInput2').value  = QROLL_URL || '';
     document.getElementById('bothErr').textContent = '';
     showSheet('askBoth');
   }
 
   function saveBoth(){
     var n = document.getElementById('nameInput2').value.trim();
-    var u = document.getElementById('urlInput2').value.trim();
     var err = document.getElementById('bothErr');
-    if (!n)         { err.textContent = 'Please enter your name.'; return; }
-    if (!isExec(u)) { err.textContent = 'That doesn’t look like a QRoll app link.'; return; }
-    write(NAME_KEY, n); write(URL_KEY, u); QROLL_URL = u;
+    if (!n) { err.textContent = 'Please enter your name.'; return; }
+    write(NAME_KEY, n);
     hideSheet(); paint(); boot();
   }
 
@@ -715,8 +680,8 @@
   // ---------- boot ----------
   // Ask only for what is genuinely missing, then get out of the way.
   function boot(){
-    if (!storedName())  { showSheet('askName'); return; }
-    if (!QROLL_URL)     { showSheet('askUrl');  return; }
+    if (!storedName())  { showSheet('askName');   return; }
+    if (!QROLL_URL)     { showSheet('linkError'); return; }
     if (PREVIEW)        { return; }              // tap to continue instead
     // Decide before the countdown, not after it expires — a teacher standing
     // in a classroom should not watch a progress bar fill just to be handed a
@@ -738,11 +703,10 @@
   paint();
   boot();
 
-  ['nameInput','urlInput','nameInput2','urlInput2'].forEach(function(id){
+  ['nameInput','nameInput2'].forEach(function(id){
     document.getElementById(id).addEventListener('keyup', function(e){
       if (e.key !== 'Enter') return;
       if (id === 'nameInput') saveName();
-      else if (id === 'urlInput') saveUrl();
       else saveBoth();
     });
   });
