@@ -172,7 +172,7 @@ var STORE_PENDING = 'pending', STORE_META = 'meta';
 var STATUSES = ['Present', 'Absent', 'On Leave', 'On Duty'];
 var SHORT = { 'Present': 'P', 'Absent': 'A', 'On Leave': 'L', 'On Duty': 'OD' };
 
-var cfg = null;          // {u, d, t}
+var cfg = null;          // {u, d, t, w}
 var roster = null;       // {classes:[{className,students:[{roll,name}]}], fetchedAt}
 var draft = null;        // {className, date, marks:{roll:status}}
 var dbP = null;          // lazily created IndexedDB promise
@@ -258,7 +258,7 @@ function getMeta(k) {
    differs. ----------------------------------------------------------------- */
 function call(action, extra) {
   if (!cfg) return Promise.reject(new Error('This device is not paired.'));
-  var body = Object.assign({ action: action, deviceId: cfg.d, token: cfg.t }, extra || {});
+  var body = Object.assign({ action: action, deviceId: cfg.d, token: cfg.t, workspaceId: cfg.w }, extra || {});
   return fetch(cfg.u, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -295,12 +295,12 @@ function pair() {
     var b = raw.replace(/-/g, '+').replace(/_/g, '/');
     o = JSON.parse(decodeURIComponent(escape(atob(b))));
   } catch (e) { o = null; }
-  if (!o || !o.u || !o.d || !o.t) {
+  if (!o || !o.u || !o.d || !o.t || !o.w) {
     $('pairMsg').innerHTML = '<span class="err">That code is not valid. Copy it again from the console.</span>';
     return;
   }
   $('pairMsg').textContent = 'Checking…';
-  var prev = cfg; saveCfg({ u: o.u, d: o.d, t: o.t });
+  var prev = cfg; saveCfg({ u: o.u, d: o.d, t: o.t, w: o.w });
   call('ping').then(function () {
     $('pairMsg').innerHTML = '<span class="ok">✅ Paired. Fetching your class lists…</span>';
     return refreshRoster(true);
