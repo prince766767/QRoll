@@ -33,6 +33,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>QRoll — Scan. Present. Done.</title>
 
+  <!-- Warms the DNS + TLS connection to the console's host while the splash
+       is still on screen, so goNow()'s eventual navigation has less setup
+       left to do. A hint only — fetches nothing and changes no behavior. -->
+  <link rel="preconnect" href="https://script.google.com">
+  <link rel="dns-prefetch" href="https://script.google.com">
+
   <!-- Home-screen icon (Android reads the manifest, iOS reads apple-touch-icon) -->
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="qroll-icon-192.png">
