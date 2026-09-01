@@ -33,6 +33,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>QRoll — Scan. Present. Done.</title>
 
+  <!-- Warms the DNS + TLS connection to the console's host while the splash
+       is still on screen, so goNow()'s eventual navigation has less setup
+       left to do. A hint only — fetches nothing and changes no behavior. -->
+  <link rel="preconnect" href="https://script.google.com">
+  <link rel="dns-prefetch" href="https://script.google.com">
+
   <!-- Home-screen icon (Android reads the manifest, iOS reads apple-touch-icon) -->
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="qroll-icon-192.png">
@@ -399,6 +405,26 @@
       <button class="btn" onclick="location.reload()">Reload</button>
     </div>
 
+    <!-- Shown once, right before the hand-off to the console -- never again
+         on this device unless POLICY_VERSION changes (see script below). -->
+    <div id="consentGate" class="hidden">
+      <h2>Before you continue</h2>
+      <p>Please review and agree to QRoll's Privacy Policy and Terms of
+         Service to open the console.</p>
+      <p style="margin:0 0 4px;font-size:13px">
+        <a href="./privacy.html" target="_blank" rel="noopener">Privacy Policy</a>
+        &nbsp;&middot;&nbsp;
+        <a href="./terms.html" target="_blank" rel="noopener">Terms of Service</a>
+      </p>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12.5px;
+                     font-weight:600;color:#4a5568;margin:14px 0 0;cursor:pointer">
+        <input type="checkbox" id="consentCheck" style="width:auto;margin-top:2px">
+        <span>I have read and agree to the Privacy Policy and Terms of Service.</span>
+      </label>
+      <div class="err" id="consentErr"></div>
+      <button class="btn" onclick="agreeConsent()">Agree &amp; Continue</button>
+    </div>
+
     <!-- Shown once, right after a first-time teacher saves their name --
          before they ever reach the console -- so the rest of setup (Google
          sign-in, workspace, PIN) happens inside the installed app from the
@@ -468,9 +494,16 @@
   var DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbyr06oFfvY4tmVs1gEL0b5An9utqCuewe8Q4XDUe5gVFZRwuDcIvTM0LHHpQBbUu6Vn/exec';
   /* ============================================================== */
 
-  var WAIT_MS   = 5000;                    // splash holds for three seconds
-  var URL_KEY   = 'qroll_exec_url';
-  var NAME_KEY  = 'qroll_teacher_name';
+  /* Bump this string whenever privacy.html or terms.html changes in any way
+     that matters -- it's the ONLY thing that makes an already-agreed teacher
+     see the consent screen again. Any distinct value works; a date is just
+     easy to reason about. */
+  var POLICY_VERSION = '2026-09-01';
+
+  var WAIT_MS    = 5000;                    // splash holds for three seconds
+  var URL_KEY    = 'qroll_exec_url';
+  var NAME_KEY   = 'qroll_teacher_name';
+  var CONSENT_KEY = 'qroll_consent_version';
 
   // ---------- storage ----------
   function read(k){ try { return (localStorage.getItem(k) || '').trim(); } catch(e){ return ''; } }
@@ -658,8 +691,30 @@
     goNow();
   }
 
+  // ---------- one-time privacy/terms consent, right before hand-off ----------
+  function hasConsent(){ return read(CONSENT_KEY) === POLICY_VERSION; }
+
+  function showConsent(){
+    cancelCountdown();
+    document.getElementById('consentErr').textContent = '';
+    document.getElementById('consentCheck').checked = false;
+    showSheet('consentGate');
+  }
+
+  function agreeConsent(){
+    if (!document.getElementById('consentCheck').checked){
+      document.getElementById('consentErr').textContent =
+        'Please check the box to continue.';
+      return;
+    }
+    write(CONSENT_KEY, POLICY_VERSION);
+    hideSheet();
+    goNow();
+  }
+
   function goNow(){
     if (leaving || !QROLL_URL) return;
+    if (!hasConsent()){ showConsent(); return; }
     if (!navigator.onLine){ showOffline(); return; }
     leaving = true;
     clearTimeout(timer);
@@ -675,7 +730,7 @@
   function showSheet(which){
     cancelCountdown();
     document.getElementById('sheet').classList.remove('hidden');
-    ['askName','linkError','askBoth','installPrompt'].forEach(function(id){
+    ['askName','linkError','askBoth','installPrompt','consentGate'].forEach(function(id){
       document.getElementById(id).classList.toggle('hidden', id !== which);
     });
     var first = document.querySelector('#' + which + ' input');
