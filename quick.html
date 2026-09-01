@@ -386,13 +386,33 @@ function renderStudents() {
         + 'onclick="setMark(\'' + esc(s.roll).replace(/'/g, "\\'") + '\',\'' + st + '\')">'
         + SHORT[st] + '</button>';
     }).join('');
-    return '<div class="stu"><div class="nm"><b>' + esc(s.name) + '</b><span>'
+    return '<div class="stu" data-roll="' + esc(s.roll) + '"><div class="nm"><b>' + esc(s.name) + '</b><span>'
       + esc(s.roll) + '</span></div><div class="seg">' + segs + '</div></div>';
   }).join('');
   tally();
 }
 
-function setMark(roll, status) { draft.marks[roll] = status; renderStudents(); }
+// One tap only ever changes one student's row (the 4 status buttons' pressed
+// state) — the rest of the (possibly 50+ row) list is untouched, so update
+// just that row's buttons instead of re-stringifying and re-parsing the
+// whole list through innerHTML. Falls back to the old full re-render if the
+// row can't be found, so the result is never wrong, only occasionally not
+// the fast path.
+function setMark(roll, status) {
+  draft.marks[roll] = status;
+  var updated = false;
+  try {
+    var row = document.querySelector('#studentList .stu[data-roll="' + CSS.escape(roll) + '"] .seg');
+    if (row) {
+      var btns = row.children;
+      for (var i = 0; i < btns.length; i++) {
+        btns[i].setAttribute('aria-pressed', String(STATUSES[i] === status));
+      }
+      updated = true;
+    }
+  } catch (e) { /* fall through to full render */ }
+  if (updated) tally(); else renderStudents();
+}
 function markAll(status) {
   draft.students.forEach(function (s) { draft.marks[s.roll] = status; });
   renderStudents();
