@@ -479,6 +479,24 @@
         <b>&#10003; QRoll is installed</b><br>
         You are already running it from the home screen.
       </div>
+
+      <div class="divider"><span>Troubleshooting</span></div>
+
+      <button class="btn alt" onclick="showAccountHint()">Switch Google account</button>
+      <div class="a2hs hidden" id="acctHint">
+        <b>Using the wrong Google account?</b><br>
+        <span id="acctHintText">QRoll always signs in with whichever Google account your
+          browser is currently using &mdash; it has no way to change that itself. Tap your
+          profile picture in Chrome (top right) and choose <b>Add another account</b> or
+          <b>sign out</b>, then reopen QRoll.</span>
+      </div>
+
+      <button class="btn alt" onclick="resetQRoll()">Start QRoll over on this phone</button>
+      <div class="a2hs" style="margin-top:8px">
+        Clears your saved name and any remembered QRoll link on this phone, then starts
+        setup fresh. Does not touch your Google sign-in or any data already saved in your
+        workspace.
+      </div>
     </div>
 
   </div>
@@ -773,6 +791,40 @@
   }
 
   function closeSettings(){ hideSheet(); boot(); }
+
+  // ---------- troubleshooting: wrong Google account / stale local state ----------
+  // QRoll never stores which Google account is signed in -- that lives entirely in
+  // Chrome's own session for script.google.com, off-limits to this page's JS (a
+  // different origin). All this can do is point at Chrome's own account switcher.
+  function showAccountHint(){
+    var el = document.getElementById('acctHintText');
+    var ua = navigator.userAgent;
+    if (/iPhone|iPad|iPod/.test(ua)) {
+      el.innerHTML = 'QRoll always signs in with whichever Google account Safari is ' +
+        'currently using &mdash; it has no way to change that itself. Open the ' +
+        '<b>Settings</b> app &rarr; <b>Safari</b> &rarr; sign out of the wrong Google ' +
+        'account (or use the account picker Google shows when you reopen QRoll), then ' +
+        'try again.';
+    } else {
+      el.innerHTML = 'QRoll always signs in with whichever Google account your browser ' +
+        'is currently using &mdash; it has no way to change that itself. Tap your ' +
+        'profile picture in Chrome (top right) and choose <b>Add another account</b> or ' +
+        '<b>sign out</b> of the wrong one, then reopen QRoll and sign in again.';
+    }
+    document.getElementById('acctHint').classList.remove('hidden');
+  }
+
+  // Clears only what QRoll itself remembers on this phone (name, any saved link
+  // override, consent) and starts the first-run flow over. Cannot touch, and does not
+  // claim to touch, the Google sign-in session -- see showAccountHint() above for that.
+  function resetQRoll(){
+    if (!confirm('This clears your saved name and remembered QRoll link on this phone, ' +
+                  'and starts setup over. Continue?')) return;
+    [NAME_KEY, URL_KEY, CONSENT_KEY].forEach(function(k){
+      try { localStorage.removeItem(k); } catch(e){ /* private mode */ }
+    });
+    location.reload();
+  }
 
   // ---------- boot ----------
   // Ask only for what is genuinely missing, then get out of the way.
