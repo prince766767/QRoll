@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "in.qroll.app",
+      "sha256_cert_fingerprints": [
+        "63:C2:D6:4E:93:56:43:CD:13:C7:1A:73:B8:6B:07:F9:86:96:0B:92:B8:8B:FF:8C:CE:EA:BA:E5:B6:A4:BB:58"
+      ]
+    }
+  }
+]
