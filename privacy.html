@@ -57,7 +57,7 @@
       <img src="qroll-icon-192.png" alt="QRoll">
       <b>QRoll</b>
     </div>
-    <p class="updated">Last updated: 27 August 2026</p>
+    <p class="updated">Last updated: 23 September 2026</p>
 
     <h1>Privacy Policy</h1>
 
@@ -85,10 +85,13 @@
         screen on a shared device — this is separate from your Google
         password and is never sent anywhere outside your own workspace.</li>
     </ul>
-    <p>None of this data is copied to any server, database, or account other
-    than your own Google Account. There is no separate QRoll backend — the
-    "console" you use is Google Apps Script code running under your own
-    Google identity, reading and writing your own Google Sheet.</p>
+    <p>Your roster, attendance, marks, and PIN are never copied to any
+    server, database, or account other than your own Google Account — there
+    is no separate QRoll backend for this data; the "console" you use is
+    Google Apps Script code running under your own Google identity, reading
+    and writing your own Google Sheet. The one exception, a small sign-up
+    log unrelated to your roster or attendance, is described below under
+    "Sign-up log."</p>
 
     <h2>Students' data</h2>
     <p>Student names, roll numbers and attendance are entered and controlled
@@ -98,6 +101,30 @@
     QR code to mark their own attendance submits only what is needed for that
     (their identifying roll number and the class session) directly into the
     teacher's workspace.</p>
+
+    <h2>Sign-up log</h2>
+    <p>When you first create or attach a workspace, QRoll records one row —
+    your email address, your institution name (if provided), a timestamp,
+    and a link to your new workspace Sheet — in a small internal Google
+    Sheet controlled by QRoll's developer. This is used only to see how many
+    teachers have joined and to catch problems like automated bot sign-ups.
+    It never includes your roster, attendance, marks, or any student data,
+    and is never shared, sold, or used for marketing. It is kept for as long
+    as QRoll operates centrally; contact
+    <a href="mailto:princethakur@gmail.com">princethakur@gmail.com</a> if
+    you'd like your entry removed.</p>
+
+    <h2>Student report lookup</h2>
+    <p>A teacher can choose to generate a report link for one class and
+    share it (for example, over WhatsApp). A student who opens that link and
+    correctly enters their own class roll number and university roll number
+    can view their own attendance percentage, absent days, CCA marks,
+    mid-term award, and assignment status for that class only — nothing
+    about any other student. Entering the wrong numbers repeatedly locks
+    that link temporarily. This is the only situation where workspace data
+    is shown to someone other than the signed-in teacher, it is opt-in per
+    class (a teacher must deliberately generate and share the link), and it
+    only ever shows a student their own record.</p>
 
     <h2>Google permissions QRoll requests, and why</h2>
     <ul>
@@ -118,8 +145,11 @@
     <ul>
       <li>No advertising, no ad tracking, no analytics, no third-party
         scripts or cookies of any kind.</li>
-      <li>No data is sold, shared, or shown to anyone other than the signed-in
-        teacher who owns that workspace.</li>
+      <li>No data is sold to anyone, ever.</li>
+      <li>Workspace data (roster, attendance, marks) is shown only to the
+        signed-in teacher who owns that workspace, except for the opt-in
+        Student report lookup feature described above, which only ever
+        shows a student their own record.</li>
       <li>No workspace can read another teacher's data — each Google Sheet is
         private to the account that created or was given it.</li>
     </ul>
