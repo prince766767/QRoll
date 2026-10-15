@@ -1,3 +1,6 @@
+// QRoll - Copyright (c) 2026 Dr. Prince Thakur. All rights reserved.
+// Proprietary software: copying, modifying or distributing this file, in
+// whole or in part, without written permission is prohibited. See LICENSE.
 /* QRoll launcher service worker.
  *
  * Its only real job is to make Chrome treat this page as an installable app
