@@ -157,6 +157,10 @@
       font-style:italic;line-height:1.6;color:#cfe8da}
     .quote .by{display:block;margin-top:4px;font-style:normal;font-size:10.5px;
       font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:#8fc2a5}
+    /* Hindi / Sanskrit: Devanagari has no real italic, and letter-spacing
+       breaks its conjuncts, so these are set upright and slightly larger. */
+    .quote.hi{font-style:normal;font-size:clamp(12.5px,3.3vw,14px);line-height:1.75}
+    .quote.hi .by{letter-spacing:0;font-size:11.5px}
 
     /* ---- Independence Day (1–16 August only) ---- */
     .ind{position:relative;overflow:hidden;padding:9px 20px 11px;border-radius:13px;
@@ -594,12 +598,18 @@
   /* =====================================================================
      TEACHING QUOTES
 
-     Shown under the greeting, one at random per launch. Kept to lines that are
-     genuinely attributable — a misattributed quote on a teacher's own screen is
-     a small daily embarrassment. Proverbs are labelled as proverbs rather than
-     given a convenient famous name.
+     Shown under the greeting. Kept to lines that are genuinely attributable —
+     a misattributed quote on a teacher's own screen is a small daily
+     embarrassment. Proverbs and subhashitas are labelled as such rather than
+     given a convenient famous name. A third entry 'hi' marks Hindi / Sanskrit
+     lines, which are set upright (Devanagari has no true italic) with lang="hi".
+
+     Order: every quote is shown once, in a shuffled order, before any repeats
+     (see nextQuote below), so a teacher opening QRoll several times a day does
+     not keep meeting the same handful of lines.
      ===================================================================== */
   var QUOTES = [
+    // ---- English ----
     ['Education is the most powerful weapon which you can use to change the world.', 'Nelson Mandela'],
     ['A teacher affects eternity; he can never tell where his influence stops.', 'Henry Adams'],
     ['The art of teaching is the art of assisting discovery.', 'Mark Van Doren'],
@@ -611,11 +621,70 @@
     ['The mediocre teacher tells. The good teacher explains. The superior teacher demonstrates. The great teacher inspires.', 'William Arthur Ward'],
     ['The highest education is that which does not merely give us information but makes our life in harmony with all existence.', 'Rabindranath Tagore'],
     ['Teaching is a very noble profession that shapes the character, calibre and future of an individual.', 'Dr. A. P. J. Abdul Kalam'],
+    ['Learning gives creativity, creativity leads to thinking, thinking provides knowledge, knowledge makes you great.', 'Dr. A. P. J. Abdul Kalam'],
     ['The end-product of education should be a free creative man.', 'Dr. S. Radhakrishnan'],
     ['Awake, arise and educate; smash traditions and liberate.', 'Savitribai Phule'],
+    ['By education I mean an all-round drawing out of the best in child and man — body, mind and spirit.', 'Mahatma Gandhi'],
+    ['The mind is not a vessel that needs filling, but wood that needs igniting.', 'Plutarch'],
+    ['It is the supreme art of the teacher to awaken joy in creative expression and knowledge.', 'Albert Einstein'],
+    ['What we learn with pleasure we never forget.', 'Alfred Mercier'],
+    ['The beautiful thing about learning is that nobody can take it away from you.', 'B. B. King'],
+    ['Education is the passport to the future, for tomorrow belongs to those who prepare for it today.', 'Malcolm X'],
+    ['One child, one teacher, one book, one pen can change the world.', 'Malala Yousafzai'],
+    ['Intelligence plus character — that is the goal of true education.', 'Martin Luther King Jr.'],
+    ['I am not a teacher, but an awakener.', 'Robert Frost'],
+    ['Develop a passion for learning. If you do, you will never cease to grow.', "Anthony J. D'Angelo"],
+    ['Education is the movement from darkness to light.', 'Allan Bloom'],
     ['Teachers open the door, but you must enter by yourself.', 'Chinese proverb'],
-    ['By learning you will teach; by teaching you will learn.', 'Latin proverb']
+    ['By learning you will teach; by teaching you will learn.', 'Latin proverb'],
+    // ---- हिन्दी / संस्कृत ----
+    ['गुरु गोविंद दोऊ खड़े, काके लागूँ पाँय। बलिहारी गुरु आपनो, गोविंद दियो बताय॥', 'कबीर', 'hi'],
+    ['पोथी पढ़ि पढ़ि जग मुआ, पंडित भया न कोय। ढाई आखर प्रेम का, पढ़े सो पंडित होय॥', 'कबीर', 'hi'],
+    ['जिन खोजा तिन पाइयाँ, गहरे पानी पैठ। मैं बपुरा बूडन डरा, रहा किनारे बैठ॥', 'कबीर', 'hi'],
+    ['करत-करत अभ्यास के, जड़मति होत सुजान। रसरी आवत जात ते, सिल पर परत निसान॥', 'वृंद', 'hi'],
+    ['विद्या ददाति विनयं, विनयाद् याति पात्रताम्। पात्रत्वाद् धनमाप्नोति, धनाद् धर्मं ततः सुखम्॥', 'हितोपदेश', 'hi'],
+    ['न हि ज्ञानेन सदृशं पवित्रमिह विद्यते।', 'श्रीमद्भगवद्गीता 4.38', 'hi'],
+    ['सा विद्या या विमुक्तये।', 'विष्णु पुराण', 'hi'],
+    ['तमसो मा ज्योतिर्गमय।', 'बृहदारण्यक उपनिषद्', 'hi'],
+    ['आचार्य देवो भव।', 'तैत्तिरीय उपनिषद्', 'hi'],
+    ['विद्याधनं सर्वधनप्रधानम्।', 'संस्कृत सुभाषित', 'hi'],
+    ['अप्प दीपो भव — अपना दीपक स्वयं बनो।', 'गौतम बुद्ध', 'hi'],
+    ['उत्तिष्ठत जाग्रत प्राप्य वरान्निबोधत।', 'कठोपनिषद्', 'hi'],
+    ['क्षणशः कणशश्चैव विद्यामर्थं च साधयेत्।', 'संस्कृत सुभाषित', 'hi'],
+    ['सत्यं वद। धर्मं चर। स्वाध्यायान्मा प्रमदः।', 'तैत्तिरीय उपनिषद्', 'hi']
   ];
+
+  /* Shuffle-bag: the not-yet-shown quote indices live in localStorage, so the
+     order survives closing the app. When the bag is empty it is refilled in a
+     fresh random order that never starts with the quote just shown. A bag
+     saved for a different-length list (after an update) is simply discarded.
+     Private mode / blocked storage falls back to a plain random pick. */
+  var QUOTE_BAG_KEY = 'qroll_quote_bag';
+
+  function shuffled(n){
+    var a = [];
+    for (var i = 0; i < n; i++) a.push(i);
+    for (var j = n - 1; j > 0; j--) {
+      var k = Math.floor(Math.random() * (j + 1));
+      var t = a[j]; a[j] = a[k]; a[k] = t;
+    }
+    return a;
+  }
+
+  function nextQuote(){
+    var n = QUOTES.length, st = null;
+    try { st = JSON.parse(localStorage.getItem(QUOTE_BAG_KEY) || 'null'); } catch(e){ st = null; }
+    if (!st || st.n !== n || !Array.isArray(st.bag)) st = { n: n, bag: [], last: -1 };
+    st.bag = st.bag.filter(function(i){ return i >= 0 && i < n; });
+    if (!st.bag.length) {
+      st.bag = shuffled(n);
+      if (n > 1 && st.bag[0] === st.last) st.bag.push(st.bag.shift());
+    }
+    var idx = st.bag.shift();
+    st.last = idx;
+    write(QUOTE_BAG_KEY, JSON.stringify(st));
+    return QUOTES[idx];
+  }
 
   /* =====================================================================
      INDEPENDENCE DAY
@@ -662,9 +731,11 @@
     document.getElementById('greet').textContent =
       name ? (pick(GREETINGS[partOfDay()]) + ', ' + name) : 'Welcome to QRoll';
 
-    var q = pick(QUOTES);
-    document.getElementById('quote').innerHTML =
-      '“' + esc(q[0]) + '”<span class="by">' + esc(q[1]) + '</span>';
+    var q = nextQuote();
+    var qEl = document.getElementById('quote');
+    qEl.innerHTML = '“' + esc(q[0]) + '”<span class="by">' + esc(q[1]) + '</span>';
+    qEl.setAttribute('lang', q[2] || 'en');
+    qEl.classList.toggle('hi', q[2] === 'hi');
 
     var info = independenceInfo();
     if (info) {
